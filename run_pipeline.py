@@ -90,7 +90,7 @@ def main():
     start_time = datetime.now()
 
     print()
-    print("SAHEL INTELLIGENCE")
+    print("GEOPOLITICAL OSINT PLATFORM")
     print("OSINT PROCESSING PIPELINE")
     print()
     print(

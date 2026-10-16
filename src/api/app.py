@@ -32,7 +32,7 @@ def graph():
 def health():
     return jsonify({
         "status": "ok",
-        "service": "Sahel Intelligence API"
+        "service": "Geopolitical OSINT Platform API"
     })
 
 

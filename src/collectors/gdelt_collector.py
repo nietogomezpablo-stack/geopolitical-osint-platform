@@ -12,14 +12,14 @@ params = {
 }
 
 headers = {
-    "User-Agent": "Sahel-Intelligence/0.1"
+    "User-Agent": "Geopolitical-OSINT-Platform/0.1"
 }
 
 for intento in range(3):
 
     response = requests.get(url, params=params, headers=headers)
 
-    print("Sahel Intelligence - GDELT Collector")
+    print("Geopolitical OSINT Platform - GDELT Collector")
     print("Intento:", intento + 1)
     print("Código HTTP:", response.status_code)
 

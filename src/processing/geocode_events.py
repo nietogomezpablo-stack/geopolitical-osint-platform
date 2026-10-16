@@ -6,7 +6,7 @@ DATABASE_PATH = "data/intelligence.db"
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 
 headers = {
-    "User-Agent": "Sahel-Intelligence/0.1"
+    "User-Agent": "Geopolitical-OSINT-Platform/0.1"
 }
 
 connection = sqlite3.connect(DATABASE_PATH)
