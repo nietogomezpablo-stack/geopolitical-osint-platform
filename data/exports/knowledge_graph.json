@@ -34,39 +34,6 @@
       }
     },
     {
-      "id": "event:5",
-      "label": "Ataque del MPLJ contra fuerzas de seguridad en Séguédine",
-      "type": "event",
-      "properties": {
-        "event_date": "2026-08-14",
-        "event_type": "armed_attack",
-        "country": "Niger",
-        "confidence": 0.6
-      }
-    },
-    {
-      "id": "event:6",
-      "label": "Ataque del MPLJ contra fuerzas de seguridad en Séguédine",
-      "type": "event",
-      "properties": {
-        "event_date": "2026-08-14",
-        "event_type": "armed_attack",
-        "country": "Niger",
-        "confidence": 0.6
-      }
-    },
-    {
-      "id": "event:7",
-      "label": "Ataque del MPLJ contra fuerzas de seguridad en Séguédine",
-      "type": "event",
-      "properties": {
-        "event_date": "2026-08-14",
-        "event_type": "armed_attack",
-        "country": "Niger",
-        "confidence": 0.6
-      }
-    },
-    {
       "id": "entity:339",
       "label": "报道称，尼日尔首都尼亚美8月29日发生未遂兵变。参与者首先袭击位于尼亚美国际机场内的“101基地”，随后袭击多处目标，战斗蔓延至总统府。尼日尔军方于次日重新控制“101基地”。尼日尔国家媒体称，有数百名士兵参与兵变，数十人死亡或被捕",
       "type": "entity",
@@ -914,21 +881,6 @@
       "relation": "occurred_at"
     },
     {
-      "source": "event:5",
-      "target": "location:1",
-      "relation": "occurred_at"
-    },
-    {
-      "source": "event:6",
-      "target": "location:1",
-      "relation": "occurred_at"
-    },
-    {
-      "source": "event:7",
-      "target": "location:1",
-      "relation": "occurred_at"
-    },
-    {
       "source": "article:4",
       "target": "event:1",
       "relation": "supports"
@@ -941,21 +893,6 @@
     {
       "source": "article:9",
       "target": "event:3",
-      "relation": "supports"
-    },
-    {
-      "source": "article:4",
-      "target": "event:5",
-      "relation": "supports"
-    },
-    {
-      "source": "article:4",
-      "target": "event:6",
-      "relation": "supports"
-    },
-    {
-      "source": "article:4",
-      "target": "event:7",
       "relation": "supports"
     }
   ]

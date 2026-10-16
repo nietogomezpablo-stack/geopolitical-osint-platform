@@ -26,66 +26,6 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          12.9665987,
-          20.1962138
-        ]
-      },
-      "properties": {
-        "event_id": 5,
-        "title": "Ataque del MPLJ contra fuerzas de seguridad en Séguédine",
-        "event_date": "2026-08-14",
-        "event_type": "armed_attack",
-        "country": "Niger",
-        "location": "Séguédine",
-        "description": "Ataques reivindicados por el MPLJ contra posiciones de las fuerzas de seguridad nigerinas en Séguédine, con varios soldados muertos y daños materiales.",
-        "confidence": 0.6
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          12.9665987,
-          20.1962138
-        ]
-      },
-      "properties": {
-        "event_id": 6,
-        "title": "Ataque del MPLJ contra fuerzas de seguridad en Séguédine",
-        "event_date": "2026-08-14",
-        "event_type": "armed_attack",
-        "country": "Niger",
-        "location": "Séguédine",
-        "description": "Ataques reivindicados por el MPLJ contra posiciones de las fuerzas de seguridad nigerinas en Séguédine, con varios soldados muertos y daños materiales.",
-        "confidence": 0.6
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          12.9665987,
-          20.1962138
-        ]
-      },
-      "properties": {
-        "event_id": 7,
-        "title": "Ataque del MPLJ contra fuerzas de seguridad en Séguédine",
-        "event_date": "2026-08-14",
-        "event_type": "armed_attack",
-        "country": "Niger",
-        "location": "Séguédine",
-        "description": "Ataques reivindicados por el MPLJ contra posiciones de las fuerzas de seguridad nigerinas en Séguédine, con varios soldados muertos y daños materiales.",
-        "confidence": 0.6
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
           0.725173,
           14.5828541
         ]

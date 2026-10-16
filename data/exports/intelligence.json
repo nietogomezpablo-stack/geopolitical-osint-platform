@@ -1,5 +1,5 @@
 {
-  "event_count": 6,
+  "event_count": 3,
   "events": [
     {
       "id": 2,
@@ -43,75 +43,6 @@
       "description": "Ataques reivindicados por el MPLJ contra posiciones de las fuerzas de seguridad nigerinas en Séguédine, con varios soldados muertos y daños materiales.",
       "confidence": 0.6,
       "created_at": "2026-10-06 10:33:13",
-      "entities": [],
-      "sources": [
-        {
-          "id": 4,
-          "title": "Niger : plusieurs soldats tués dans des attaques dun groupe rebelle dans le Nord",
-          "date": "2026-08-16 19:45:00",
-          "url": "http://seneweb.com/fr/news/Afrique/niger-plusieurs-soldats-tues-dans-des-attaques-dun-groupe-rebelle-dans-le-nord_n_501504.html",
-          "domain": "seneweb.com"
-        }
-      ]
-    },
-    {
-      "id": 5,
-      "title": "Ataque del MPLJ contra fuerzas de seguridad en Séguédine",
-      "event_date": "2026-08-14",
-      "event_type": "armed_attack",
-      "country": "Niger",
-      "location": "Séguédine",
-      "latitude": 20.1962138,
-      "longitude": 12.9665987,
-      "description": "Ataques reivindicados por el MPLJ contra posiciones de las fuerzas de seguridad nigerinas en Séguédine, con varios soldados muertos y daños materiales.",
-      "confidence": 0.6,
-      "created_at": "2026-10-07 11:18:05",
-      "entities": [],
-      "sources": [
-        {
-          "id": 4,
-          "title": "Niger : plusieurs soldats tués dans des attaques dun groupe rebelle dans le Nord",
-          "date": "2026-08-16 19:45:00",
-          "url": "http://seneweb.com/fr/news/Afrique/niger-plusieurs-soldats-tues-dans-des-attaques-dun-groupe-rebelle-dans-le-nord_n_501504.html",
-          "domain": "seneweb.com"
-        }
-      ]
-    },
-    {
-      "id": 6,
-      "title": "Ataque del MPLJ contra fuerzas de seguridad en Séguédine",
-      "event_date": "2026-08-14",
-      "event_type": "armed_attack",
-      "country": "Niger",
-      "location": "Séguédine",
-      "latitude": 20.1962138,
-      "longitude": 12.9665987,
-      "description": "Ataques reivindicados por el MPLJ contra posiciones de las fuerzas de seguridad nigerinas en Séguédine, con varios soldados muertos y daños materiales.",
-      "confidence": 0.6,
-      "created_at": "2026-10-07 11:18:41",
-      "entities": [],
-      "sources": [
-        {
-          "id": 4,
-          "title": "Niger : plusieurs soldats tués dans des attaques dun groupe rebelle dans le Nord",
-          "date": "2026-08-16 19:45:00",
-          "url": "http://seneweb.com/fr/news/Afrique/niger-plusieurs-soldats-tues-dans-des-attaques-dun-groupe-rebelle-dans-le-nord_n_501504.html",
-          "domain": "seneweb.com"
-        }
-      ]
-    },
-    {
-      "id": 7,
-      "title": "Ataque del MPLJ contra fuerzas de seguridad en Séguédine",
-      "event_date": "2026-08-14",
-      "event_type": "armed_attack",
-      "country": "Niger",
-      "location": "Séguédine",
-      "latitude": 20.1962138,
-      "longitude": 12.9665987,
-      "description": "Ataques reivindicados por el MPLJ contra posiciones de las fuerzas de seguridad nigerinas en Séguédine, con varios soldados muertos y daños materiales.",
-      "confidence": 0.6,
-      "created_at": "2026-10-07 11:24:01",
       "entities": [],
       "sources": [
         {
