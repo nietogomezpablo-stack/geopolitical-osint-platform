@@ -1,5 +1,5 @@
 {
-  "event_count": 5,
+  "event_count": 6,
   "events": [
     {
       "id": 2,
@@ -11,7 +11,7 @@
       "latitude": null,
       "longitude": null,
       "description": "Les attaques ont été revendiquées samedi par les rebelles du Mouvement patriotique pour la liberté et la justice (MPLJ), qui ont affirmé avoir fait \"15 victimes dans les rangs des FDS\" (Forces de défense et de sécurité) nigériennes, dans un communiqué publié samedi sur sa page Facebook.",
-      "confidence": 0.7,
+      "confidence": 0.6,
       "created_at": "2026-10-07 08:40:57",
       "entities": [
         {
@@ -41,7 +41,7 @@
       "latitude": 20.1962138,
       "longitude": 12.9665987,
       "description": "Ataques reivindicados por el MPLJ contra posiciones de las fuerzas de seguridad nigerinas en Séguédine, con varios soldados muertos y daños materiales.",
-      "confidence": 0.8,
+      "confidence": 0.6,
       "created_at": "2026-10-06 10:33:13",
       "entities": [],
       "sources": [
@@ -64,7 +64,7 @@
       "latitude": 20.1962138,
       "longitude": 12.9665987,
       "description": "Ataques reivindicados por el MPLJ contra posiciones de las fuerzas de seguridad nigerinas en Séguédine, con varios soldados muertos y daños materiales.",
-      "confidence": 0.8,
+      "confidence": 0.6,
       "created_at": "2026-10-07 11:18:05",
       "entities": [],
       "sources": [
@@ -87,8 +87,31 @@
       "latitude": 20.1962138,
       "longitude": 12.9665987,
       "description": "Ataques reivindicados por el MPLJ contra posiciones de las fuerzas de seguridad nigerinas en Séguédine, con varios soldados muertos y daños materiales.",
-      "confidence": 0.8,
+      "confidence": 0.6,
       "created_at": "2026-10-07 11:18:41",
+      "entities": [],
+      "sources": [
+        {
+          "id": 4,
+          "title": "Niger : plusieurs soldats tués dans des attaques dun groupe rebelle dans le Nord",
+          "date": "2026-08-16 19:45:00",
+          "url": "http://seneweb.com/fr/news/Afrique/niger-plusieurs-soldats-tues-dans-des-attaques-dun-groupe-rebelle-dans-le-nord_n_501504.html",
+          "domain": "seneweb.com"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Ataque del MPLJ contra fuerzas de seguridad en Séguédine",
+      "event_date": "2026-08-14",
+      "event_type": "armed_attack",
+      "country": "Niger",
+      "location": "Séguédine",
+      "latitude": 20.1962138,
+      "longitude": 12.9665987,
+      "description": "Ataques reivindicados por el MPLJ contra posiciones de las fuerzas de seguridad nigerinas en Séguédine, con varios soldados muertos y daños materiales.",
+      "confidence": 0.6,
+      "created_at": "2026-10-07 11:24:01",
       "entities": [],
       "sources": [
         {
@@ -110,7 +133,7 @@
       "latitude": 14.5828541,
       "longitude": 0.725173,
       "description": "16 soldats tués vendredi lors d'une attaque \"terroriste\" dans l'Ouest (média d’État)\nSeize soldats ont été tués et vingt-trois blessés vendredi lors d'une attaque \"terroriste\" dans l'ouest du Niger, près du Mali et du Burkina Faso, a rapporté dimanche l'Agence nigérienne de presse (ANP, média d’État). Le pays est dirigé depuis juillet 2023 par un régime militaire qui peine à endiguer ces violences.\n\"Une attaque terroriste ayant visé un détachement militaire dans la zone de Téra (région de Tillabéri) a fait, le vendredi 17 juillet, 16 martyrs, 23 blessés dont neuf graves, côté ami\" (armée), a affirmé l'ANP. Elle a fait également état de \"15 terroristes tués\".\nSelon une source locale, l’attaque est survenue \"dans l’après-midi de vendredi sur l’axe Bankilaré-Téra aux abords du village de Doungouro\".\n\"Les opérations de recherche de l’ennemi, de ratissage et de sécurisation continuent dans la zone\", d'après l'ANP.",
-      "confidence": 0.7,
+      "confidence": 0.6,
       "created_at": "2026-10-07 08:40:57",
       "entities": [],
       "sources": [

@@ -8,7 +8,7 @@
         "event_date": "2026-08-14",
         "event_type": "armed_attack",
         "country": "Niger",
-        "confidence": 0.8
+        "confidence": 0.6
       }
     },
     {
@@ -19,7 +19,7 @@
         "event_date": "2026-08-15",
         "event_type": "claim_responsibility",
         "country": "Niger",
-        "confidence": 0.7
+        "confidence": 0.6
       }
     },
     {
@@ -30,7 +30,7 @@
         "event_date": "2026-07-17",
         "event_type": "armed_attack",
         "country": "Niger",
-        "confidence": 0.7
+        "confidence": 0.6
       }
     },
     {
@@ -41,7 +41,7 @@
         "event_date": "2026-08-14",
         "event_type": "armed_attack",
         "country": "Niger",
-        "confidence": 0.8
+        "confidence": 0.6
       }
     },
     {
@@ -52,7 +52,18 @@
         "event_date": "2026-08-14",
         "event_type": "armed_attack",
         "country": "Niger",
-        "confidence": 0.8
+        "confidence": 0.6
+      }
+    },
+    {
+      "id": "event:7",
+      "label": "Ataque del MPLJ contra fuerzas de seguridad en Séguédine",
+      "type": "event",
+      "properties": {
+        "event_date": "2026-08-14",
+        "event_type": "armed_attack",
+        "country": "Niger",
+        "confidence": 0.6
       }
     },
     {
@@ -913,6 +924,11 @@
       "relation": "occurred_at"
     },
     {
+      "source": "event:7",
+      "target": "location:1",
+      "relation": "occurred_at"
+    },
+    {
       "source": "article:4",
       "target": "event:1",
       "relation": "supports"
@@ -935,6 +951,11 @@
     {
       "source": "article:4",
       "target": "event:6",
+      "relation": "supports"
+    },
+    {
+      "source": "article:4",
+      "target": "event:7",
       "relation": "supports"
     }
   ]

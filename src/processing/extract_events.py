@@ -1,6 +1,9 @@
 import sqlite3
 
-connection = sqlite3.connect("data/intelligence.db")
+DATABASE_PATH = "data/intelligence.db"
+
+connection = sqlite3.connect(DATABASE_PATH)
+connection.execute("PRAGMA foreign_keys = ON")
 cursor = connection.cursor()
 
 article_id = 4
@@ -15,33 +18,60 @@ confidence = 0.8
 
 cursor.execute(
     """
-    INSERT INTO events (
-        title,
-        event_date,
-        event_type,
-        country,
-        location,
-        description,
-        confidence
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    SELECT id
+    FROM events
+    WHERE event_date = ?
+      AND event_type = ?
+      AND country = ?
+      AND location = ?
+    ORDER BY id
+    LIMIT 1
     """,
     (
-        title,
         event_date,
         event_type,
         country,
-        location,
-        description,
-        confidence
+        location
     )
 )
 
-event_id = cursor.lastrowid
+existing_event = cursor.fetchone()
+
+if existing_event is not None:
+    event_id = existing_event[0]
+    print("Evento ya existente.")
+
+else:
+    cursor.execute(
+        """
+        INSERT INTO events (
+            title,
+            event_date,
+            event_type,
+            country,
+            location,
+            description,
+            confidence
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            title,
+            event_date,
+            event_type,
+            country,
+            location,
+            description,
+            confidence
+        )
+    )
+
+    event_id = cursor.lastrowid
+    print("Evento nuevo creado.")
 
 cursor.execute(
     """
-    INSERT INTO event_articles (
+    INSERT OR IGNORE INTO event_articles (
         event_id,
         article_id
     )
@@ -56,6 +86,5 @@ cursor.execute(
 connection.commit()
 connection.close()
 
-print("Evento creado correctamente.")
 print("Event ID:", event_id)
 print("Article ID:", article_id)

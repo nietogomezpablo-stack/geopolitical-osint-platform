@@ -18,7 +18,7 @@
         "country": "Niger",
         "location": "Séguédine",
         "description": "Ataques reivindicados por el MPLJ contra posiciones de las fuerzas de seguridad nigerinas en Séguédine, con varios soldados muertos y daños materiales.",
-        "confidence": 0.8
+        "confidence": 0.6
       }
     },
     {
@@ -38,7 +38,7 @@
         "country": "Niger",
         "location": "Séguédine",
         "description": "Ataques reivindicados por el MPLJ contra posiciones de las fuerzas de seguridad nigerinas en Séguédine, con varios soldados muertos y daños materiales.",
-        "confidence": 0.8
+        "confidence": 0.6
       }
     },
     {
@@ -58,7 +58,27 @@
         "country": "Niger",
         "location": "Séguédine",
         "description": "Ataques reivindicados por el MPLJ contra posiciones de las fuerzas de seguridad nigerinas en Séguédine, con varios soldados muertos y daños materiales.",
-        "confidence": 0.8
+        "confidence": 0.6
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.9665987,
+          20.1962138
+        ]
+      },
+      "properties": {
+        "event_id": 7,
+        "title": "Ataque del MPLJ contra fuerzas de seguridad en Séguédine",
+        "event_date": "2026-08-14",
+        "event_type": "armed_attack",
+        "country": "Niger",
+        "location": "Séguédine",
+        "description": "Ataques reivindicados por el MPLJ contra posiciones de las fuerzas de seguridad nigerinas en Séguédine, con varios soldados muertos y daños materiales.",
+        "confidence": 0.6
       }
     },
     {
@@ -78,7 +98,7 @@
         "country": "Niger",
         "location": "Bankilaré-Téra",
         "description": "16 soldats tués vendredi lors d'une attaque \"terroriste\" dans l'Ouest (média d’État)\nSeize soldats ont été tués et vingt-trois blessés vendredi lors d'une attaque \"terroriste\" dans l'ouest du Niger, près du Mali et du Burkina Faso, a rapporté dimanche l'Agence nigérienne de presse (ANP, média d’État). Le pays est dirigé depuis juillet 2023 par un régime militaire qui peine à endiguer ces violences.\n\"Une attaque terroriste ayant visé un détachement militaire dans la zone de Téra (région de Tillabéri) a fait, le vendredi 17 juillet, 16 martyrs, 23 blessés dont neuf graves, côté ami\" (armée), a affirmé l'ANP. Elle a fait également état de \"15 terroristes tués\".\nSelon une source locale, l’attaque est survenue \"dans l’après-midi de vendredi sur l’axe Bankilaré-Téra aux abords du village de Doungouro\".\n\"Les opérations de recherche de l’ennemi, de ratissage et de sécurisation continuent dans la zone\", d'après l'ANP.",
-        "confidence": 0.7
+        "confidence": 0.6
       }
     }
   ]
