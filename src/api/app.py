@@ -809,6 +809,100 @@ def meridian_v7_export_csv():
         },
     )
 
+
+
+@app.route("/api/intelligence-v8/evolution")
+def meridian_v8_evolution():
+    import sys
+    from pathlib import Path
+    from flask import jsonify, request
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_evolution_v8 import list_evolution
+
+    try:
+        limit = int(request.args.get("limit", 100))
+    except ValueError:
+        return jsonify({"error": "Límite inválido"}), 400
+
+    return jsonify(list_evolution(limit))
+
+
+@app.route("/api/intelligence-v8/evolution/synchronize", methods=["POST"])
+def meridian_v8_synchronize():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_evolution_v8 import synchronize
+
+    return jsonify(synchronize())
+
+
+@app.route("/api/intelligence-v8/candidate/<path:key>/history")
+def meridian_v8_candidate_history(key):
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_evolution_v8 import candidate_history
+
+    return jsonify(candidate_history(key))
+
+
+@app.route("/api/intelligence-v8/export.json")
+def meridian_v8_export():
+    import sys
+    import json
+    from pathlib import Path
+    from flask import Response
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_evolution_v8 import list_evolution
+
+    return Response(
+        json.dumps(
+            list_evolution(limit=500),
+            ensure_ascii=False,
+            indent=2,
+        ),
+        mimetype="application/json",
+        headers={
+            "Content-Disposition":
+                "attachment; filename=meridian_niger_evolution.json"
+        },
+    )
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",

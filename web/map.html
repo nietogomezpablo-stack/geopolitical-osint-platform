@@ -2962,5 +2962,204 @@ load(true);
 })();
 </script>
 
+
+<style id="meridian-evolution-v8-style">
+#meridian-evolution-v8 {
+    background: #102337;
+    border: 1px solid #35546d;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 12px 20px;
+    color: #e1edfa;
+    font: 12px Arial, sans-serif;
+}
+
+#meridian-evolution-v8 h3 {
+    font-size: 14px;
+    margin: 0 0 10px;
+}
+
+#meridian-evolution-v8 button {
+    background: #1b344d;
+    color: #e6f2ff;
+    border: 1px solid #456b8c;
+    border-radius: 5px;
+    padding: 7px;
+    margin: 0 7px 8px 0;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+#meridian-evolution-v8 .v8-row {
+    border-top: 1px solid #2e4c66;
+    padding: 9px 0;
+}
+
+#meridian-evolution-v8 .v8-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+#meridian-evolution-v8 .v8-meta {
+    color: #aac6da;
+    font-size: 11px;
+    line-height: 1.5;
+}
+</style>
+
+<section id="meridian-evolution-v8">
+    <h3>Evolución de acontecimientos · Níger</h3>
+
+    <div id="meridian-v8-summary">
+        Cargando historial...
+    </div>
+
+    <div style="margin-top:10px">
+        <button id="meridian-v8-refresh">
+            Actualizar historial
+        </button>
+
+        <button id="meridian-v8-sync">
+            Detectar cambios
+        </button>
+
+        <button id="meridian-v8-export">
+            Exportar historial JSON
+        </button>
+    </div>
+
+    <div id="meridian-v8-list"></div>
+</section>
+
+<script id="meridian-evolution-v8-script">
+(function () {
+    "use strict";
+
+    const summary = document.getElementById(
+        "meridian-v8-summary"
+    );
+
+    const list = document.getElementById(
+        "meridian-v8-list"
+    );
+
+    function element(tag, value) {
+        const node = document.createElement(tag);
+
+        if (value !== undefined) {
+            node.textContent = String(value);
+        }
+
+        return node;
+    }
+
+    async function load() {
+        const response = await fetch(
+            "/api/intelligence-v8/evolution",
+            {cache: "no-store"}
+        );
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        const data = await response.json();
+
+        summary.textContent =
+            data.events.length +
+            " registros de evolución";
+
+        list.replaceChildren();
+
+        data.events.forEach(event => {
+            const row = element("div");
+            row.className = "v8-row";
+
+            const title = element(
+                "div",
+                event.event_type
+            );
+            title.className = "v8-title";
+
+            const meta = element(
+                "div",
+                event.candidate_key +
+                " · " +
+                event.created_at
+            );
+            meta.className = "v8-meta";
+
+            const details = element(
+                "div",
+                JSON.stringify(event.details)
+            );
+            details.className = "v8-meta";
+
+            row.append(title, meta, details);
+            list.appendChild(row);
+        });
+
+        if (!data.events.length) {
+            list.appendChild(
+                element(
+                    "div",
+                    "Todavía no hay cambios registrados."
+                )
+            );
+        }
+    }
+
+    document.getElementById(
+        "meridian-v8-refresh"
+    ).addEventListener("click", () => {
+        load().catch(error => {
+            summary.textContent = error.message;
+        });
+    });
+
+    document.getElementById(
+        "meridian-v8-sync"
+    ).addEventListener("click", async () => {
+        try {
+            const response = await fetch(
+                "/api/intelligence-v8/evolution/synchronize",
+                {method: "POST"}
+            );
+
+            if (!response.ok) {
+                throw new Error("Error al detectar cambios");
+            }
+
+            await load();
+
+        } catch (error) {
+            summary.textContent = error.message;
+        }
+    });
+
+    document.getElementById(
+        "meridian-v8-export"
+    ).addEventListener("click", () => {
+        window.location.href =
+            "/api/intelligence-v8/export.json";
+    });
+
+    const search = document.getElementById(
+        "meridian-search-v7"
+    );
+
+    if (search) {
+        search.insertAdjacentElement(
+            "afterend",
+            document.getElementById("meridian-evolution-v8")
+        );
+    }
+
+    load().catch(error => {
+        summary.textContent = error.message;
+    });
+})();
+</script>
+
 </body>
 </html>
