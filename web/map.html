@@ -3839,5 +3839,203 @@ load(true);
 })();
 </script>
 
+
+<style id="meridian-provenance-v12-style">
+#meridian-provenance-v12 {
+    background:#102337;
+    border:1px solid #35546d;
+    border-radius:8px;
+    padding:12px;
+    margin:12px 20px;
+    color:#e1edfa;
+    font:12px Arial,sans-serif;
+}
+
+#meridian-provenance-v12 h3 {
+    font-size:14px;
+    margin:0 0 10px;
+}
+
+#meridian-provenance-v12 button,
+#meridian-provenance-v12 a {
+    background:#1b344d;
+    color:#e6f2ff;
+    border:1px solid #456b8c;
+    border-radius:5px;
+    padding:7px;
+    margin:0 7px 8px 0;
+    cursor:pointer;
+    font-size:12px;
+    text-decoration:none;
+    display:inline-block;
+}
+
+#meridian-provenance-v12 .v12-row {
+    border-top:1px solid #2e4c66;
+    padding:9px 0;
+}
+
+#meridian-provenance-v12 .v12-title {
+    font-weight:bold;
+    margin-bottom:5px;
+}
+
+#meridian-provenance-v12 .v12-meta {
+    color:#aac6da;
+    font-size:11px;
+    line-height:1.5;
+}
+
+#meridian-provenance-v12 .v12-links {
+    margin-top:6px;
+    overflow-wrap:anywhere;
+}
+</style>
+
+<section id="meridian-provenance-v12">
+    <h3>Trazabilidad de fuentes · Níger</h3>
+
+    <div id="meridian-v12-summary">
+        Analizando fuentes...
+    </div>
+
+    <div style="margin-top:10px">
+        <button id="meridian-v12-refresh">
+            Actualizar análisis
+        </button>
+
+        <a href="/api/intelligence-v12/export.csv">
+            Exportar CSV
+        </a>
+
+        <a href="/api/intelligence-v12/export.json">
+            Exportar JSON
+        </a>
+    </div>
+
+    <div id="meridian-v12-list"></div>
+</section>
+
+<script id="meridian-provenance-v12-script">
+(function () {
+    "use strict";
+
+    const summary = document.getElementById(
+        "meridian-v12-summary"
+    );
+
+    const list = document.getElementById(
+        "meridian-v12-list"
+    );
+
+    function element(tag, value) {
+        const node = document.createElement(tag);
+
+        if (value !== undefined) {
+            node.textContent = String(value);
+        }
+
+        return node;
+    }
+
+    async function load() {
+        const response = await fetch(
+            "/api/intelligence-v12/provenance",
+            {cache:"no-store"}
+        );
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        const data = await response.json();
+
+        summary.textContent =
+            data.candidate_count +
+            " candidatos · " +
+            data.catalog_article_count +
+            " artículos · " +
+            data.duplicate_url_groups.length +
+            " grupos de URLs duplicadas · " +
+            data.shared_articles.length +
+            " artículos compartidos";
+
+        list.replaceChildren();
+
+        data.candidates.forEach(candidate => {
+            const row = element("div");
+            row.className = "v12-row";
+
+            const title = element(
+                "div",
+                candidate.title || "Sin título"
+            );
+            title.className = "v12-title";
+
+            const meta = element(
+                "div",
+                candidate.article_count +
+                " artículos asociados · " +
+                candidate.domain_count +
+                " dominios identificados"
+            );
+            meta.className = "v12-meta";
+
+            row.append(title, meta);
+
+            const links = element("div");
+            links.className = "v12-links";
+
+            candidate.source_urls.forEach(url => {
+                const link = element("a", url);
+
+                link.href = url;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+
+                links.appendChild(link);
+            });
+
+            row.appendChild(links);
+            list.appendChild(row);
+        });
+
+        if (!data.candidates.length) {
+            list.appendChild(
+                element(
+                    "div",
+                    "No hay candidatos con trazabilidad disponible."
+                )
+            );
+        }
+    }
+
+    document.getElementById(
+        "meridian-v12-refresh"
+    ).addEventListener("click", () => {
+        load().catch(error => {
+            summary.textContent = error.message;
+        });
+    });
+
+    const pipeline = document.getElementById(
+        "meridian-full-pipeline-v11"
+    );
+
+    if (pipeline) {
+        pipeline.insertAdjacentElement(
+            "afterend",
+            document.getElementById(
+                "meridian-provenance-v12"
+            )
+        );
+    }
+
+    load().catch(error => {
+        summary.textContent = error.message;
+    });
+})();
+</script>
+
 </body>
 </html>
