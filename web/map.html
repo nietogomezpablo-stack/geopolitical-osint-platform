@@ -4037,5 +4037,199 @@ load(true);
 })();
 </script>
 
+
+<style id="meridian-verification-v13-style">
+#meridian-verification-v13 {
+    background:#102337;
+    border:1px solid #35546d;
+    border-radius:8px;
+    padding:12px;
+    margin:12px 20px;
+    color:#e1edfa;
+    font:12px Arial,sans-serif;
+}
+
+#meridian-verification-v13 h3 {
+    font-size:14px;
+    margin:0 0 10px;
+}
+
+#meridian-verification-v13 button,
+#meridian-verification-v13 a {
+    background:#1b344d;
+    color:#e6f2ff;
+    border:1px solid #456b8c;
+    border-radius:5px;
+    padding:7px;
+    margin:0 7px 8px 0;
+    cursor:pointer;
+    font-size:12px;
+    text-decoration:none;
+    display:inline-block;
+}
+
+#meridian-verification-v13 .v13-row {
+    border-top:1px solid #2e4c66;
+    padding:9px 0;
+}
+
+#meridian-verification-v13 .v13-title {
+    font-weight:bold;
+    margin-bottom:5px;
+}
+
+#meridian-verification-v13 .v13-meta {
+    color:#aac6da;
+    font-size:11px;
+    line-height:1.5;
+}
+
+#meridian-verification-v13 .v13-check {
+    padding:3px 0;
+}
+</style>
+
+<section id="meridian-verification-v13">
+    <h3>Verificación de evidencias · Níger</h3>
+
+    <div id="meridian-v13-summary">
+        Analizando evidencias...
+    </div>
+
+    <div style="margin-top:10px">
+        <button id="meridian-v13-refresh">
+            Actualizar comprobaciones
+        </button>
+
+        <a href="/api/intelligence-v13/export.csv">
+            Exportar CSV
+        </a>
+
+        <a href="/api/intelligence-v13/export.json">
+            Exportar JSON
+        </a>
+    </div>
+
+    <div id="meridian-v13-list"></div>
+</section>
+
+<script id="meridian-verification-v13-script">
+(function () {
+    "use strict";
+
+    const summary = document.getElementById(
+        "meridian-v13-summary"
+    );
+
+    const list = document.getElementById(
+        "meridian-v13-list"
+    );
+
+    function element(tag, value) {
+        const node = document.createElement(tag);
+
+        if (value !== undefined) {
+            node.textContent = String(value);
+        }
+
+        return node;
+    }
+
+    async function load() {
+        const response = await fetch(
+            "/api/intelligence-v13/verification",
+            {cache:"no-store"}
+        );
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        const data = await response.json();
+
+        summary.textContent =
+            data.candidate_count +
+            " candidatos analizados · " +
+            data.most_common_information_gaps.length +
+            " tipos de información pendiente";
+
+        list.replaceChildren();
+
+        data.candidates.forEach(candidate => {
+            const row = element("div");
+            row.className = "v13-row";
+
+            const title = element(
+                "div",
+                candidate.title || "Sin título"
+            );
+            title.className = "v13-title";
+
+            const meta = element(
+                "div",
+                candidate.passed_checks +
+                "/" +
+                candidate.total_checks +
+                " comprobaciones documentales satisfechas · " +
+                candidate.documentation_coverage_percent +
+                "% de cobertura"
+            );
+            meta.className = "v13-meta";
+
+            row.append(title, meta);
+
+            candidate.checks.forEach(check => {
+                const checkRow = element(
+                    "div",
+                    (check.passed ? "✓ " : "○ ") +
+                    check.label
+                );
+
+                checkRow.className =
+                    "v13-check v13-meta";
+
+                row.appendChild(checkRow);
+            });
+
+            list.appendChild(row);
+        });
+
+        if (!data.candidates.length) {
+            list.appendChild(
+                element(
+                    "div",
+                    "No hay candidatos disponibles."
+                )
+            );
+        }
+    }
+
+    document.getElementById(
+        "meridian-v13-refresh"
+    ).addEventListener("click", () => {
+        load().catch(error => {
+            summary.textContent = error.message;
+        });
+    });
+
+    const provenance = document.getElementById(
+        "meridian-provenance-v12"
+    );
+
+    if (provenance) {
+        provenance.insertAdjacentElement(
+            "afterend",
+            document.getElementById(
+                "meridian-verification-v13"
+            )
+        );
+    }
+
+    load().catch(error => {
+        summary.textContent = error.message;
+    });
+})();
+</script>
+
 </body>
 </html>

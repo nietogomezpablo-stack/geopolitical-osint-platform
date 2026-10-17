@@ -1307,6 +1307,112 @@ def meridian_v12_export_csv():
         },
     )
 
+
+
+@app.route("/api/intelligence-v13/verification")
+def meridian_v13_verification():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_verification_v13 import analyze
+
+    return jsonify(analyze())
+
+
+@app.route("/api/intelligence-v13/verification/<path:key>")
+def meridian_v13_candidate_verification(key):
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_verification_v13 import (
+        candidate_verification,
+    )
+
+    result = candidate_verification(key)
+
+    if result is None:
+        return jsonify({
+            "error": "Candidato no encontrado"
+        }), 404
+
+    return jsonify(result)
+
+
+@app.route("/api/intelligence-v13/export.json")
+def meridian_v13_export_json():
+    import sys
+    import json
+    from pathlib import Path
+    from flask import Response
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_verification_v13 import analyze
+
+    return Response(
+        json.dumps(
+            analyze(),
+            ensure_ascii=False,
+            indent=2,
+            default=str,
+        ),
+        mimetype="application/json",
+        headers={
+            "Content-Disposition":
+                "attachment; filename=meridian_niger_verification.json"
+        },
+    )
+
+
+@app.route("/api/intelligence-v13/export.csv")
+def meridian_v13_export_csv():
+    import sys
+    from pathlib import Path
+    from flask import Response
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_verification_v13 import export_csv
+
+    return Response(
+        export_csv(),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition":
+                "attachment; filename=meridian_niger_verification.csv"
+        },
+    )
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",
