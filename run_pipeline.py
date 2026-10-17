@@ -53,10 +53,19 @@ PIPELINE_STEPS = [
         "src/database/check_database.py"
     ),
     (
-        "Exportación GeoJSON",
+        "Exportación de candidatos",
         "src/processing/export_event_candidates.py"
+    ),
+    (
+        "Enriquecimiento de candidatos",
         "src/processing/enrich_event_candidates.py"
+    ),
+    (
+        "Inteligencia de eventos V4",
         "src/processing/event_intelligence_v4.py"
+    ),
+    (
+        "Exportación GeoJSON",
         "src/processing/export_events_geojson.py"
     ),
     (
