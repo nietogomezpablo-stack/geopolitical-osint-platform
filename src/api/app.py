@@ -2065,6 +2065,28 @@ def meridian_correlations_v29_csv():
     return Response(export_csv(analyze()), mimetype='text/csv; charset=utf-8',
                     headers={'Content-Disposition': 'attachment; filename=meridian_correlations_v29.csv'})
 
+
+@app.route('/api/observability-v33/report')
+def meridian_observability_v33_report():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+    folder = str(Path(__file__).resolve().parents[1] / 'processing')
+    if folder not in sys.path: sys.path.insert(0, folder)
+    from meridian_observability_v30_v33 import analyze
+    return jsonify(analyze())
+
+@app.route('/api/observability-v33/export.csv')
+def meridian_observability_v33_csv():
+    import sys
+    from pathlib import Path
+    from flask import Response
+    folder = str(Path(__file__).resolve().parents[1] / 'processing')
+    if folder not in sys.path: sys.path.insert(0, folder)
+    from meridian_observability_v30_v33 import analyze, export_csv
+    return Response(export_csv(analyze()), mimetype='text/csv; charset=utf-8',
+        headers={'Content-Disposition':'attachment; filename=meridian_sources_v33.csv'})
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",

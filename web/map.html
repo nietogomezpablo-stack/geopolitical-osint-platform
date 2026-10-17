@@ -5642,5 +5642,45 @@ load(true);
 })();
 </script>
 
+
+<style>
+#meridian-observability-v33{background:#102337;color:#e2edf7;border:1px solid #36536c;border-radius:8px;padding:12px;margin:12px 20px;font:12px Arial,sans-serif}
+#meridian-observability-v33 h3{font-size:14px;margin:0 0 10px}
+#meridian-observability-v33 a,#meridian-observability-v33 button{display:inline-block;padding:6px 9px;background:#1e3a55;border:1px solid #476b8a;border-radius:5px;color:#e2edf7;margin:6px 6px 6px 0;cursor:pointer;text-decoration:none}
+#meridian-observability-v33 .obs-row{border-top:1px solid #36536c;padding:7px 0}
+</style>
+<section id="meridian-observability-v33">
+<h3>Observabilidad de fuentes · Níger</h3>
+<div id="meridian-observability-v33-summary">Cargando...</div>
+<button type="button" id="meridian-observability-v33-refresh">Actualizar</button>
+<a href="/api/observability-v33/export.csv">Fuentes CSV</a>
+<a href="/api/observability-v33/report">Informe JSON</a>
+<div id="meridian-observability-v33-details"></div>
+<p>Diagnóstico descriptivo: no implica verificación ni confirmación de acontecimientos.</p>
+</section>
+<script>
+(function(){'use strict';
+ const root=document.getElementById('meridian-observability-v33');
+ const summary=document.getElementById('meridian-observability-v33-summary');
+ const details=document.getElementById('meridian-observability-v33-details');
+ async function refresh(){
+  const response=await fetch('/api/observability-v33/report',{cache:'no-store'});
+  if(!response.ok)throw Error('No se pudo consultar el diagnóstico');
+  const data=await response.json(); const s=data.summary;
+  summary.textContent='Noticias: '+s.articles+' · Dominios: '+s.domains+' · Últimos 7 días: '+s.articles_last_7_days+' · Fechas ausentes: '+s.articles_missing_or_invalid_dates+' · Alertas activas: '+s.active_alerts+' · Pipeline: '+(s.last_pipeline_status||'sin datos');
+  details.replaceChildren();
+  for(const item of data.source_distribution.slice(0,15)){
+   const row=document.createElement('div');row.className='obs-row';
+   row.textContent=item.domain+' · '+item.articles+' noticias';details.appendChild(row);
+  }
+  for(const warning of data.warnings){const row=document.createElement('div');row.className='obs-row';row.textContent='Revisar: '+warning;details.appendChild(row);}
+ }
+ document.getElementById('meridian-observability-v33-refresh').addEventListener('click',()=>refresh().catch(e=>summary.textContent=e.message));
+ const previous=document.getElementById('meridian-correlations-v29');
+ if(previous)previous.insertAdjacentElement('afterend',root);
+ refresh().catch(e=>summary.textContent=e.message);
+})();
+</script>
+
 </body>
 </html>
