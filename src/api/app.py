@@ -1004,6 +1004,83 @@ def meridian_v9_report_html(report_id):
         },
     )
 
+
+
+@app.route("/api/intelligence-v10/status")
+def meridian_v10_status():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_orchestrator_v10 import operational_status
+
+    return jsonify(operational_status())
+
+
+@app.route("/api/intelligence-v10/runs")
+def meridian_v10_runs():
+    import sys
+    from pathlib import Path
+    from flask import jsonify, request
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_orchestrator_v10 import list_runs
+
+    try:
+        limit = int(request.args.get("limit", 30))
+    except ValueError:
+        return jsonify({"error": "Límite inválido"}), 400
+
+    return jsonify(list_runs(limit))
+
+
+@app.route("/api/intelligence-v10/execute", methods=["POST"])
+def meridian_v10_execute():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_orchestrator_v10 import execute
+
+    try:
+        result = execute()
+
+    except RuntimeError as error:
+        return jsonify({
+            "error": str(error)
+        }), 409
+
+    status = (
+        200
+        if result["status"] == "completed"
+        else 500
+    )
+
+    return jsonify(result), status
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",

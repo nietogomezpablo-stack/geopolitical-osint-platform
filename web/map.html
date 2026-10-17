@@ -3369,5 +3369,226 @@ load(true);
 })();
 </script>
 
+
+<style id="meridian-operations-v10-style">
+#meridian-operations-v10 {
+    background:#102337;
+    border:1px solid #35546d;
+    border-radius:8px;
+    padding:12px;
+    margin:12px 20px;
+    color:#e1edfa;
+    font:12px Arial,sans-serif;
+}
+
+#meridian-operations-v10 h3 {
+    font-size:14px;
+    margin:0 0 10px;
+}
+
+#meridian-operations-v10 button {
+    background:#1b344d;
+    color:#e6f2ff;
+    border:1px solid #456b8c;
+    border-radius:5px;
+    padding:7px;
+    margin:0 7px 8px 0;
+    cursor:pointer;
+    font-size:12px;
+}
+
+#meridian-operations-v10 .v10-row {
+    border-top:1px solid #2e4c66;
+    padding:9px 0;
+}
+
+#meridian-operations-v10 .v10-title {
+    font-weight:bold;
+    margin-bottom:5px;
+}
+
+#meridian-operations-v10 .v10-meta {
+    color:#aac6da;
+    font-size:11px;
+    line-height:1.5;
+}
+</style>
+
+<section id="meridian-operations-v10">
+    <h3>Centro de operaciones OSINT · Níger</h3>
+
+    <div id="meridian-v10-summary">
+        Cargando estado...
+    </div>
+
+    <div style="margin-top:10px">
+        <button id="meridian-v10-execute">
+            Ejecutar análisis completo
+        </button>
+
+        <button id="meridian-v10-refresh">
+            Actualizar estado
+        </button>
+    </div>
+
+    <div id="meridian-v10-runs"></div>
+</section>
+
+<script id="meridian-operations-v10-script">
+(function () {
+    "use strict";
+
+    const summary = document.getElementById(
+        "meridian-v10-summary"
+    );
+
+    const runs = document.getElementById(
+        "meridian-v10-runs"
+    );
+
+    const executeButton = document.getElementById(
+        "meridian-v10-execute"
+    );
+
+    function element(tag, value) {
+        const node = document.createElement(tag);
+
+        if (value !== undefined) {
+            node.textContent = String(value);
+        }
+
+        return node;
+    }
+
+    async function load() {
+        const responses = await Promise.all([
+            fetch(
+                "/api/intelligence-v10/status",
+                {cache:"no-store"}
+            ),
+            fetch(
+                "/api/intelligence-v10/runs",
+                {cache:"no-store"}
+            )
+        ]);
+
+        if (!responses.every(response => response.ok)) {
+            throw new Error("Error consultando operaciones");
+        }
+
+        const status = await responses[0].json();
+        const history = await responses[1].json();
+
+        summary.textContent =
+            status.total_runs + " ejecuciones · " +
+            status.completed_runs + " completadas · " +
+            status.failed_runs + " fallidas";
+
+        runs.replaceChildren();
+
+        history.runs.forEach(run => {
+            const row = element("div");
+            row.className = "v10-row";
+
+            const title = element(
+                "div",
+                "Ejecución #" + run.id +
+                " · " + run.status
+            );
+            title.className = "v10-title";
+
+            const meta = element(
+                "div",
+                run.started_at +
+                " · Duración: " +
+                (run.duration_seconds ?? "—") +
+                " segundos"
+            );
+            meta.className = "v10-meta";
+
+            row.append(title, meta);
+
+            if (run.error_message) {
+                const error = element(
+                    "div",
+                    run.error_message
+                );
+                error.className = "v10-meta";
+                row.appendChild(error);
+            }
+
+            runs.appendChild(row);
+        });
+
+        if (!history.runs.length) {
+            runs.appendChild(
+                element(
+                    "div",
+                    "Todavía no hay ejecuciones registradas."
+                )
+            );
+        }
+    }
+
+    executeButton.addEventListener(
+        "click",
+        async () => {
+            executeButton.disabled = true;
+            summary.textContent =
+                "Ejecutando análisis OSINT...";
+
+            try {
+                const response = await fetch(
+                    "/api/intelligence-v10/execute",
+                    {method:"POST"}
+                );
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error ||
+                        "Falló la ejecución"
+                    );
+                }
+
+                await load();
+
+            } catch (error) {
+                summary.textContent = error.message;
+
+            } finally {
+                executeButton.disabled = false;
+            }
+        }
+    );
+
+    document.getElementById(
+        "meridian-v10-refresh"
+    ).addEventListener("click", () => {
+        load().catch(error => {
+            summary.textContent = error.message;
+        });
+    });
+
+    const reports = document.getElementById(
+        "meridian-reports-v9"
+    );
+
+    if (reports) {
+        reports.insertAdjacentElement(
+            "afterend",
+            document.getElementById(
+                "meridian-operations-v10"
+            )
+        );
+    }
+
+    load().catch(error => {
+        summary.textContent = error.message;
+    });
+})();
+</script>
+
 </body>
 </html>
