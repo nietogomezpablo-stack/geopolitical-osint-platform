@@ -3161,5 +3161,213 @@ load(true);
 })();
 </script>
 
+
+<style id="meridian-reports-v9-style">
+#meridian-reports-v9 {
+    background:#102337;
+    border:1px solid #35546d;
+    border-radius:8px;
+    padding:12px;
+    margin:12px 20px;
+    color:#e1edfa;
+    font:12px Arial,sans-serif;
+}
+
+#meridian-reports-v9 h3 {
+    font-size:14px;
+    margin:0 0 10px;
+}
+
+#meridian-reports-v9 button,
+#meridian-reports-v9 a {
+    background:#1b344d;
+    color:#e6f2ff;
+    border:1px solid #456b8c;
+    border-radius:5px;
+    padding:7px;
+    margin:0 7px 8px 0;
+    cursor:pointer;
+    font-size:12px;
+    text-decoration:none;
+    display:inline-block;
+}
+
+#meridian-reports-v9 .v9-row {
+    border-top:1px solid #2e4c66;
+    padding:10px 0;
+}
+
+#meridian-reports-v9 .v9-title {
+    font-weight:bold;
+    margin-bottom:6px;
+}
+
+#meridian-reports-v9 .v9-meta {
+    color:#aac6da;
+    font-size:11px;
+}
+</style>
+
+<section id="meridian-reports-v9">
+    <h3>Informes de inteligencia · Níger</h3>
+
+    <div id="meridian-v9-summary">
+        Cargando informes...
+    </div>
+
+    <div style="margin-top:10px">
+        <button id="meridian-v9-generate">
+            Generar nuevo informe
+        </button>
+
+        <button id="meridian-v9-refresh">
+            Actualizar historial
+        </button>
+    </div>
+
+    <div id="meridian-v9-list"></div>
+</section>
+
+<script id="meridian-reports-v9-script">
+(function () {
+    "use strict";
+
+    const summary = document.getElementById(
+        "meridian-v9-summary"
+    );
+
+    const list = document.getElementById(
+        "meridian-v9-list"
+    );
+
+    function element(tag, value) {
+        const node = document.createElement(tag);
+
+        if (value !== undefined) {
+            node.textContent = String(value);
+        }
+
+        return node;
+    }
+
+    async function load() {
+        const response = await fetch(
+            "/api/intelligence-v9/reports",
+            {cache:"no-store"}
+        );
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        const data = await response.json();
+
+        summary.textContent =
+            data.reports.length +
+            " informes disponibles";
+
+        list.replaceChildren();
+
+        data.reports.forEach(report => {
+            const row = element("div");
+            row.className = "v9-row";
+
+            const title = element(
+                "div",
+                report.title
+            );
+            title.className = "v9-title";
+
+            const meta = element(
+                "div",
+                report.generated_at
+            );
+            meta.className = "v9-meta";
+
+            const json = element("a", "Ver JSON");
+            json.href =
+                "/api/intelligence-v9/reports/" +
+                report.id;
+            json.target = "_blank";
+            json.rel = "noopener noreferrer";
+
+            const html = element("a", "Descargar HTML");
+            html.href =
+                "/api/intelligence-v9/reports/" +
+                report.id +
+                "/html";
+
+            row.append(
+                title,
+                meta,
+                json,
+                html
+            );
+
+            list.appendChild(row);
+        });
+
+        if (!data.reports.length) {
+            list.appendChild(
+                element(
+                    "div",
+                    "Todavía no hay informes."
+                )
+            );
+        }
+    }
+
+    document.getElementById(
+        "meridian-v9-generate"
+    ).addEventListener("click", async () => {
+        try {
+            summary.textContent =
+                "Generando informe...";
+
+            const response = await fetch(
+                "/api/intelligence-v9/reports/generate",
+                {method:"POST"}
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    "No se pudo generar el informe"
+                );
+            }
+
+            await load();
+
+        } catch (error) {
+            summary.textContent = error.message;
+        }
+    });
+
+    document.getElementById(
+        "meridian-v9-refresh"
+    ).addEventListener("click", () => {
+        load().catch(error => {
+            summary.textContent = error.message;
+        });
+    });
+
+    const evolution = document.getElementById(
+        "meridian-evolution-v8"
+    );
+
+    if (evolution) {
+        evolution.insertAdjacentElement(
+            "afterend",
+            document.getElementById(
+                "meridian-reports-v9"
+            )
+        );
+    }
+
+    load().catch(error => {
+        summary.textContent = error.message;
+    });
+})();
+</script>
+
 </body>
 </html>

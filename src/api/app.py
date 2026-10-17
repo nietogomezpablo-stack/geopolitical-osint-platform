@@ -903,6 +903,107 @@ def meridian_v8_export():
         },
     )
 
+
+
+@app.route("/api/intelligence-v9/reports", methods=["GET"])
+def meridian_v9_reports():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_reports_v9 import list_reports
+
+    return jsonify(list_reports())
+
+
+@app.route("/api/intelligence-v9/reports/generate", methods=["POST"])
+def meridian_v9_generate_report():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_reports_v9 import save_report
+
+    return jsonify(save_report()), 201
+
+
+@app.route("/api/intelligence-v9/reports/<int:report_id>")
+def meridian_v9_get_report(report_id):
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_reports_v9 import get_report
+
+    report = get_report(report_id)
+
+    if report is None:
+        return jsonify({
+            "error": "Informe no encontrado"
+        }), 404
+
+    return jsonify(report)
+
+
+@app.route("/api/intelligence-v9/reports/<int:report_id>/html")
+def meridian_v9_report_html(report_id):
+    import sys
+    from pathlib import Path
+    from flask import Response, jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_reports_v9 import (
+        get_report,
+        render_html,
+    )
+
+    report = get_report(report_id)
+
+    if report is None:
+        return jsonify({
+            "error": "Informe no encontrado"
+        }), 404
+
+    return Response(
+        render_html(report),
+        mimetype="text/html",
+        headers={
+            "Content-Disposition":
+                "attachment; filename=meridian_niger_report.html"
+        },
+    )
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",
