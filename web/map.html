@@ -190,6 +190,64 @@ html[dir="rtl"] .leaflet-container{direction:ltr}
 
 
 
+
+<style id="meridian-main-fullscreen">
+
+/* Aprovechar toda la pantalla disponible */
+
+html,
+body {
+    width: 100% !important;
+    min-height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Ampliar el área principal sin modificar la barra lateral */
+
+main,
+.main-content,
+.dashboard-content,
+.content-wrapper,
+#main-content {
+    max-width: none !important;
+    width: auto !important;
+    min-width: 0 !important;
+}
+
+/* Eliminar límites de anchura del dashboard */
+
+.container,
+.container-fluid,
+.dashboard-container {
+    max-width: none !important;
+}
+
+/* Aprovechar la altura disponible */
+
+main,
+.main-content,
+.dashboard-content {
+    min-height: calc(100vh - 20px);
+}
+
+/* Ampliar el mapa geopolítico principal */
+
+#map,
+#mapid,
+.leaflet-map,
+.main-map {
+    min-height: 58vh !important;
+}
+
+/* Mantener compacto el panel de investigación */
+
+#meridian-v4-panel {
+    font-size: inherit;
+}
+
+</style>
+
 </head>
 <body>
 <div class="app">
