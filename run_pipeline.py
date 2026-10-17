@@ -55,6 +55,7 @@ PIPELINE_STEPS = [
     (
         "Exportación GeoJSON",
         "src/processing/export_event_candidates.py"
+        "src/processing/enrich_event_candidates.py"
         "src/processing/export_events_geojson.py"
     ),
     (
