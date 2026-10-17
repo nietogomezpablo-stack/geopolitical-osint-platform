@@ -2041,6 +2041,30 @@ def meridian_quality_v25_summary():
         "summary": report["summary"],
     })
 
+
+@app.route('/api/correlations-v29/report')
+def meridian_correlations_v29_report():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+    processing = str(Path(__file__).resolve().parents[1] / 'processing')
+    if processing not in sys.path:
+        sys.path.insert(0, processing)
+    from meridian_correlations_v26_v29 import analyze
+    return jsonify(analyze())
+
+@app.route('/api/correlations-v29/export.csv')
+def meridian_correlations_v29_csv():
+    import sys
+    from pathlib import Path
+    from flask import Response
+    processing = str(Path(__file__).resolve().parents[1] / 'processing')
+    if processing not in sys.path:
+        sys.path.insert(0, processing)
+    from meridian_correlations_v26_v29 import analyze, export_csv
+    return Response(export_csv(analyze()), mimetype='text/csv; charset=utf-8',
+                    headers={'Content-Disposition': 'attachment; filename=meridian_correlations_v29.csv'})
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",

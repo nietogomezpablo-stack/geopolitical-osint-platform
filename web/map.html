@@ -5602,5 +5602,45 @@ load(true);
 })();
 </script>
 
+
+<style>
+#meridian-correlations-v29 {background:#102337;color:#e2edf7;border:1px solid #36536c;border-radius:8px;padding:12px;margin:12px 20px;font:12px Arial,sans-serif}
+#meridian-correlations-v29 h3{font-size:14px;margin:0 0 10px}
+#meridian-correlations-v29 a,#meridian-correlations-v29 button{display:inline-block;padding:6px 9px;background:#1e3a55;border:1px solid #476b8a;border-radius:5px;color:#e2edf7;margin:6px 6px 6px 0;cursor:pointer;text-decoration:none}
+#meridian-correlations-v29 .correlation-row{border-top:1px solid #36536c;padding:7px 0}
+</style>
+<section id="meridian-correlations-v29">
+<h3>Correlación documental · Níger</h3>
+<div id="meridian-correlations-v29-summary">Consultando datos...</div>
+<button type="button" id="meridian-correlations-v29-refresh">Actualizar</button>
+<a href="/api/correlations-v29/export.csv">Exportar CSV</a>
+<a href="/api/correlations-v29/report">Ver JSON</a>
+<div id="meridian-correlations-v29-results"></div>
+<p>Coincidencias y discrepancias sugeridas: requieren revisión humana. No son eventos verificados.</p>
+</section>
+<script>
+(function(){
+ const root=document.getElementById('meridian-correlations-v29');
+ const summary=document.getElementById('meridian-correlations-v29-summary');
+ const results=document.getElementById('meridian-correlations-v29-results');
+ async function refresh(){
+  const response=await fetch('/api/correlations-v29/report',{cache:'no-store'});
+  if(!response.ok)throw Error('Error consultando correlaciones');
+  const data=await response.json();
+  summary.textContent='Noticias: '+data.summary.articles+' · Posibles coincidencias: '+data.summary.possible_similar_pairs+' · Dominios: '+data.summary.domains+' · Discrepancias a revisar: '+data.summary.potential_discrepancies;
+  results.replaceChildren();
+  for(const item of data.similar_articles.slice(0,25)){
+   const row=document.createElement('div');row.className='correlation-row';
+   row.textContent=item.title_a+' ↔ '+item.title_b+' · Similitud: '+Math.round(item.similarity*100)+'%';
+   results.appendChild(row);
+  }
+ }
+ document.getElementById('meridian-correlations-v29-refresh').addEventListener('click',()=>refresh().catch(e=>summary.textContent=e.message));
+ const previous=document.getElementById('meridian-quality-v25');
+ if(previous)previous.insertAdjacentElement('afterend',root);
+ refresh().catch(e=>summary.textContent=e.message);
+})();
+</script>
+
 </body>
 </html>
