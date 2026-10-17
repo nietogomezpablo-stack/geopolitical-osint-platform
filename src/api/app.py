@@ -1081,6 +1081,127 @@ def meridian_v10_execute():
 
     return jsonify(result), status
 
+
+
+@app.route("/api/intelligence-v11/plan")
+def meridian_v11_plan():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_pipeline_v11 import plan
+
+    return jsonify(plan())
+
+
+@app.route("/api/intelligence-v11/runs")
+def meridian_v11_runs():
+    import sys
+    from pathlib import Path
+    from flask import jsonify, request
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_pipeline_v11 import list_runs
+
+    try:
+        limit = int(request.args.get("limit", 30))
+    except ValueError:
+        return jsonify({
+            "error": "Límite inválido"
+        }), 400
+
+    return jsonify(list_runs(limit))
+
+
+@app.route("/api/intelligence-v11/runs/<int:run_id>")
+def meridian_v11_run_details(run_id):
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_pipeline_v11 import get_run
+
+    result = get_run(run_id)
+
+    if result is None:
+        return jsonify({
+            "error": "Ejecución no encontrada"
+        }), 404
+
+    return jsonify(result)
+
+
+@app.route("/api/intelligence-v11/execute", methods=["POST"])
+def meridian_v11_execute():
+    import sys
+    from pathlib import Path
+    from flask import jsonify, request
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_pipeline_v11 import execute_full_update
+
+    payload = request.get_json(silent=True) or {}
+
+    if not isinstance(payload, dict):
+        return jsonify({
+            "error": "Formato de solicitud inválido"
+        }), 400
+
+    dry_run = payload.get("dry_run", False)
+
+    if not isinstance(dry_run, bool):
+        return jsonify({
+            "error": "dry_run debe ser booleano"
+        }), 400
+
+    try:
+        result = execute_full_update(
+            dry_run=dry_run,
+        )
+
+    except RuntimeError as error:
+        return jsonify({
+            "error": str(error)
+        }), 409
+
+    status = (
+        200
+        if result["status"] != "failed"
+        else 500
+    )
+
+    return jsonify(result), status
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",

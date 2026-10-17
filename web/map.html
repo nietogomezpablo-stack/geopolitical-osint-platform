@@ -3590,5 +3590,254 @@ load(true);
 })();
 </script>
 
+
+<style id="meridian-full-pipeline-v11-style">
+#meridian-full-pipeline-v11 {
+    background:#102337;
+    border:1px solid #35546d;
+    border-radius:8px;
+    padding:12px;
+    margin:12px 20px;
+    color:#e1edfa;
+    font:12px Arial,sans-serif;
+}
+
+#meridian-full-pipeline-v11 h3 {
+    font-size:14px;
+    margin:0 0 10px;
+}
+
+#meridian-full-pipeline-v11 button {
+    background:#1b344d;
+    color:#e6f2ff;
+    border:1px solid #456b8c;
+    border-radius:5px;
+    padding:7px;
+    margin:0 7px 8px 0;
+    cursor:pointer;
+    font-size:12px;
+}
+
+#meridian-full-pipeline-v11 .v11-row {
+    border-top:1px solid #2e4c66;
+    padding:9px 0;
+}
+
+#meridian-full-pipeline-v11 .v11-title {
+    font-weight:bold;
+    margin-bottom:5px;
+}
+
+#meridian-full-pipeline-v11 .v11-meta {
+    color:#aac6da;
+    font-size:11px;
+    line-height:1.5;
+}
+</style>
+
+<section id="meridian-full-pipeline-v11">
+    <h3>Actualización completa OSINT · Níger</h3>
+
+    <div id="meridian-v11-summary">
+        Cargando...
+    </div>
+
+    <div style="margin-top:10px">
+        <button id="meridian-v11-plan">
+            Ver plan
+        </button>
+
+        <button id="meridian-v11-execute">
+            Recopilar noticias y actualizar inteligencia
+        </button>
+
+        <button id="meridian-v11-refresh">
+            Actualizar historial
+        </button>
+    </div>
+
+    <div id="meridian-v11-runs"></div>
+</section>
+
+<script id="meridian-full-pipeline-v11-script">
+(function () {
+    "use strict";
+
+    const summary = document.getElementById(
+        "meridian-v11-summary"
+    );
+
+    const runs = document.getElementById(
+        "meridian-v11-runs"
+    );
+
+    const executeButton = document.getElementById(
+        "meridian-v11-execute"
+    );
+
+    function element(tag, value) {
+        const node = document.createElement(tag);
+
+        if (value !== undefined) {
+            node.textContent = String(value);
+        }
+
+        return node;
+    }
+
+    async function load() {
+        const response = await fetch(
+            "/api/intelligence-v11/runs",
+            {cache:"no-store"}
+        );
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        const data = await response.json();
+
+        summary.textContent =
+            data.runs.length +
+            " actualizaciones registradas";
+
+        runs.replaceChildren();
+
+        data.runs.forEach(run => {
+            const row = element("div");
+            row.className = "v11-row";
+
+            const title = element(
+                "div",
+                "Actualización #" + run.id +
+                " · " + run.status
+            );
+            title.className = "v11-title";
+
+            const meta = element(
+                "div",
+                run.started_at +
+                " · " +
+                (run.duration_seconds ?? "—") +
+                " segundos"
+            );
+            meta.className = "v11-meta";
+
+            row.append(title, meta);
+
+            if (run.error_message) {
+                const error = element(
+                    "div",
+                    run.error_message
+                );
+                error.className = "v11-meta";
+                row.appendChild(error);
+            }
+
+            runs.appendChild(row);
+        });
+
+        if (!data.runs.length) {
+            runs.appendChild(
+                element(
+                    "div",
+                    "Todavía no hay actualizaciones completas."
+                )
+            );
+        }
+    }
+
+    document.getElementById(
+        "meridian-v11-plan"
+    ).addEventListener("click", async () => {
+        try {
+            const response = await fetch(
+                "/api/intelligence-v11/plan"
+            );
+
+            if (!response.ok) {
+                throw new Error("No se pudo cargar el plan");
+            }
+
+            const data = await response.json();
+
+            summary.textContent = data.steps
+                .map(step => step.step + ". " + step.name)
+                .join(" · ");
+
+        } catch (error) {
+            summary.textContent = error.message;
+        }
+    });
+
+    executeButton.addEventListener(
+        "click",
+        async () => {
+            executeButton.disabled = true;
+
+            summary.textContent =
+                "Recopilando noticias y actualizando inteligencia...";
+
+            try {
+                const response = await fetch(
+                    "/api/intelligence-v11/execute",
+                    {
+                        method:"POST",
+                        headers:{
+                            "Content-Type":"application/json"
+                        },
+                        body:JSON.stringify({
+                            dry_run:false
+                        })
+                    }
+                );
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error ||
+                        "Falló la actualización"
+                    );
+                }
+
+                await load();
+
+            } catch (error) {
+                summary.textContent = error.message;
+
+            } finally {
+                executeButton.disabled = false;
+            }
+        }
+    );
+
+    document.getElementById(
+        "meridian-v11-refresh"
+    ).addEventListener("click", () => {
+        load().catch(error => {
+            summary.textContent = error.message;
+        });
+    });
+
+    const operations = document.getElementById(
+        "meridian-operations-v10"
+    );
+
+    if (operations) {
+        operations.insertAdjacentElement(
+            "afterend",
+            document.getElementById(
+                "meridian-full-pipeline-v11"
+            )
+        );
+    }
+
+    load().catch(error => {
+        summary.textContent = error.message;
+    });
+})();
+</script>
+
 </body>
 </html>
