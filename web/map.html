@@ -4912,5 +4912,218 @@ load(true);
 })();
 </script>
 
+
+<style id="meridian-triage-v16-style">
+#meridian-triage-v16 {
+    background:#102337;
+    border:1px solid #35546d;
+    border-radius:8px;
+    padding:12px;
+    margin:12px 20px;
+    color:#e1edfa;
+    font:12px Arial,sans-serif;
+}
+
+#meridian-triage-v16 h3 {
+    font-size:14px;
+    margin:0 0 10px;
+}
+
+#meridian-triage-v16 button,
+#meridian-triage-v16 a {
+    background:#1b344d;
+    color:#e6f2ff;
+    border:1px solid #456b8c;
+    border-radius:5px;
+    padding:7px;
+    margin:0 7px 8px 0;
+    cursor:pointer;
+    font-size:12px;
+    text-decoration:none;
+    display:inline-block;
+}
+
+#meridian-triage-v16 .v16-row {
+    border-top:1px solid #2e4c66;
+    padding:9px 0;
+}
+
+#meridian-triage-v16 .v16-title {
+    font-weight:bold;
+    margin-bottom:5px;
+}
+
+#meridian-triage-v16 .v16-meta {
+    color:#aac6da;
+    font-size:11px;
+    line-height:1.5;
+}
+
+#meridian-triage-v16 .v16-reason {
+    padding:3px 0;
+    color:#d5e5f2;
+}
+</style>
+
+<section id="meridian-triage-v16">
+    <h3>Priorización de investigaciones · Níger</h3>
+
+    <div id="meridian-v16-summary">
+        Calculando prioridades...
+    </div>
+
+    <div style="margin-top:10px">
+        <button id="meridian-v16-refresh">
+            Actualizar prioridades
+        </button>
+
+        <a href="/api/intelligence-v16/export.csv">
+            Exportar CSV
+        </a>
+
+        <a href="/api/intelligence-v16/export.json">
+            Exportar JSON
+        </a>
+    </div>
+
+    <div id="meridian-v16-list"></div>
+</section>
+
+<script id="meridian-triage-v16-script">
+(function () {
+    "use strict";
+
+    const summary = document.getElementById(
+        "meridian-v16-summary"
+    );
+
+    const list = document.getElementById(
+        "meridian-v16-list"
+    );
+
+    function element(tag, value) {
+        const node = document.createElement(tag);
+
+        if (value !== undefined) {
+            node.textContent = String(value);
+        }
+
+        return node;
+    }
+
+    async function load() {
+        const response = await fetch(
+            "/api/intelligence-v16/triage",
+            {cache:"no-store"}
+        );
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        const data = await response.json();
+
+        summary.textContent =
+            data.candidate_count +
+            " investigaciones · " +
+            data.priority_counts.critical +
+            " críticas · " +
+            data.priority_counts.high +
+            " altas · " +
+            data.priority_counts.medium +
+            " medias · " +
+            data.priority_counts.low +
+            " bajas";
+
+        list.replaceChildren();
+
+        if (data.verification_error) {
+            const warning = element(
+                "div",
+                "Verificación documental no disponible: " +
+                data.verification_error
+            );
+
+            warning.className = "v16-meta";
+            list.appendChild(warning);
+        }
+
+        data.candidates.forEach(candidate => {
+            const row = element("div");
+            row.className = "v16-row";
+
+            const title = element(
+                "div",
+                candidate.title ||
+                candidate.candidate_key
+            );
+
+            title.className = "v16-title";
+
+            const meta = element(
+                "div",
+                "Prioridad: " +
+                candidate.triage_priority +
+                " · Puntuación: " +
+                candidate.triage_score +
+                "/100 · Tareas abiertas: " +
+                candidate.open_tasks
+            );
+
+            meta.className = "v16-meta";
+
+            row.append(title, meta);
+
+            candidate.reasons.forEach(reason => {
+                const reasonRow = element(
+                    "div",
+                    "• " + reason.description
+                );
+
+                reasonRow.className = "v16-reason";
+
+                row.appendChild(reasonRow);
+            });
+
+            list.appendChild(row);
+        });
+
+        if (!data.candidates.length) {
+            list.appendChild(
+                element(
+                    "div",
+                    "No hay investigaciones para priorizar."
+                )
+            );
+        }
+    }
+
+    document.getElementById(
+        "meridian-v16-refresh"
+    ).addEventListener("click", () => {
+        load().catch(error => {
+            summary.textContent = error.message;
+        });
+    });
+
+    const casework = document.getElementById(
+        "meridian-casework-v15"
+    );
+
+    if (casework) {
+        casework.insertAdjacentElement(
+            "afterend",
+            document.getElementById(
+                "meridian-triage-v16"
+            )
+        );
+    }
+
+    load().catch(error => {
+        summary.textContent = error.message;
+    });
+})();
+</script>
+
 </body>
 </html>
