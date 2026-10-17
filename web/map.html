@@ -790,5 +790,553 @@ load(true);
 })();
 </script>
 
+
+<style>
+#meridian-v4-launcher {
+    position: fixed;
+    left: 18px;
+    bottom: 18px;
+    z-index: 1200;
+    background: #12253a;
+    color: #fff;
+    border: 1px solid #4b7697;
+    border-radius: 8px;
+    padding: 11px 15px;
+    cursor: pointer;
+    font: 600 13px Arial, sans-serif;
+    box-shadow: 0 5px 18px #0005;
+}
+
+#meridian-v4-panel {
+    position: fixed;
+    inset: 5vh 5vw;
+    z-index: 2000;
+    background: #0c1725;
+    color: #e5edf5;
+    border: 1px solid #34516d;
+    border-radius: 12px;
+    box-shadow: 0 15px 70px #000b;
+    display: none;
+    flex-direction: column;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+#meridian-v4-panel * {
+    box-sizing: border-box;
+}
+
+#meridian-v4-panel .v4-header {
+    padding: 17px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #2c4359;
+}
+
+#meridian-v4-panel .v4-title {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#meridian-v4-panel button {
+    cursor: pointer;
+}
+
+#meridian-v4-panel .v4-close {
+    background: transparent;
+    border: 1px solid #66839b;
+    border-radius: 6px;
+    color: white;
+    font-size: 22px;
+    padding: 3px 11px;
+}
+
+#meridian-v4-panel .v4-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 20px;
+    border-bottom: 1px solid #2c4359;
+}
+
+#meridian-v4-panel input,
+#meridian-v4-panel select {
+    background: #172b40;
+    color: white;
+    border: 1px solid #45627e;
+    border-radius: 5px;
+    padding: 9px;
+    min-width: 170px;
+}
+
+#meridian-v4-panel .v4-stats {
+    padding: 12px 20px;
+    font-size: 13px;
+    color: #b9d0e3;
+    border-bottom: 1px solid #2c4359;
+}
+
+#meridian-v4-panel .v4-list {
+    overflow-y: auto;
+    padding: 16px 20px;
+    flex: 1;
+}
+
+#meridian-v4-panel .v4-card {
+    background: #14263a;
+    border: 1px solid #2b4965;
+    border-radius: 9px;
+    padding: 16px;
+    margin-bottom: 13px;
+}
+
+#meridian-v4-panel .v4-card h3 {
+    margin: 8px 0;
+    font-size: 16px;
+    line-height: 1.4;
+}
+
+#meridian-v4-panel .v4-meta {
+    font-size: 12px;
+    color: #a7c2d9;
+    margin: 6px 0;
+}
+
+#meridian-v4-panel .v4-tag {
+    display: inline-block;
+    background: #24415c;
+    color: #d5e9fa;
+    border-radius: 4px;
+    padding: 4px 7px;
+    margin: 2px 5px 2px 0;
+    font-size: 11px;
+}
+
+#meridian-v4-panel details {
+    margin-top: 12px;
+    border-top: 1px solid #35506a;
+    padding-top: 10px;
+}
+
+#meridian-v4-panel summary {
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+#meridian-v4-panel .v4-evidence {
+    border-left: 3px solid #567d9f;
+    padding: 8px 12px;
+    margin: 9px 0;
+    background: #0e1e30;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+#meridian-v4-panel a {
+    color: #8bc8ff;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 650px) {
+    #meridian-v4-panel {
+        inset: 2vh 2vw;
+    }
+
+    #meridian-v4-panel .v4-header {
+        padding: 12px;
+    }
+
+    #meridian-v4-panel .v4-title {
+        font-size: 16px;
+    }
+
+    #meridian-v4-panel .v4-controls {
+        padding: 10px;
+    }
+
+    #meridian-v4-panel input,
+    #meridian-v4-panel select {
+        width: 100%;
+    }
+}
+</style>
+
+<button id="meridian-v4-launcher" type="button">
+    Investigación OSINT
+</button>
+
+<section id="meridian-v4-panel"
+         role="dialog"
+         aria-modal="true"
+         aria-label="Investigación OSINT"
+         aria-hidden="true">
+
+    <div class="v4-header">
+        <div class="v4-title">
+            Meridian OSINT · Investigación de acontecimientos
+        </div>
+        <button class="v4-close"
+                id="meridian-v4-close"
+                type="button"
+                aria-label="Cerrar">
+            ×
+        </button>
+    </div>
+
+    <div class="v4-controls">
+        <input id="meridian-v4-search"
+               type="search"
+               placeholder="Buscar acontecimientos...">
+
+        <select id="meridian-v4-type">
+            <option value="">Todos los tipos</option>
+        </select>
+
+        <select id="meridian-v4-status">
+            <option value="">Todos los estados</option>
+            <option value="REQUIRES_VERIFICATION">
+                Requiere verificación
+            </option>
+            <option value="UNCONFIRMED_OR_ATTEMPTED">
+                No confirmado / intento
+            </option>
+            <option value="FOILED_OR_PREVENTED">
+                Frustrado / impedido
+            </option>
+        </select>
+    </div>
+
+    <div class="v4-stats" id="meridian-v4-stats">
+        Cargando inteligencia...
+    </div>
+
+    <div class="v4-list" id="meridian-v4-list"></div>
+</section>
+
+<script>
+(function () {
+    "use strict";
+
+    const launcher = document.getElementById(
+        "meridian-v4-launcher"
+    );
+    const panel = document.getElementById(
+        "meridian-v4-panel"
+    );
+    const close = document.getElementById(
+        "meridian-v4-close"
+    );
+    const search = document.getElementById(
+        "meridian-v4-search"
+    );
+    const typeFilter = document.getElementById(
+        "meridian-v4-type"
+    );
+    const statusFilter = document.getElementById(
+        "meridian-v4-status"
+    );
+    const list = document.getElementById(
+        "meridian-v4-list"
+    );
+    const stats = document.getElementById(
+        "meridian-v4-stats"
+    );
+
+    let intelligence = null;
+
+    function element(tag, className, text) {
+        const node = document.createElement(tag);
+
+        if (className) {
+            node.className = className;
+        }
+
+        if (text !== undefined) {
+            node.textContent = String(text);
+        }
+
+        return node;
+    }
+
+    function tag(parent, text) {
+        parent.appendChild(
+            element("span", "v4-tag", text)
+        );
+    }
+
+    function safeLink(parent, url) {
+        try {
+            const parsed = new URL(url);
+
+            if (!["http:", "https:"].includes(parsed.protocol)) {
+                return;
+            }
+
+            const link = element(
+                "a",
+                "",
+                parsed.hostname
+            );
+
+            link.href = parsed.href;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+
+            parent.appendChild(link);
+            parent.appendChild(
+                document.createTextNode(" · ")
+            );
+        } catch (_) {}
+    }
+
+    function render() {
+        if (!intelligence) {
+            return;
+        }
+
+        list.replaceChildren();
+
+        const query = search.value.trim().toLowerCase();
+        const selectedType = typeFilter.value;
+        const selectedStatus = statusFilter.value;
+
+        const filtered = intelligence.candidates.filter(item => {
+            const haystack = [
+                item.title,
+                item.event_label,
+                item.event_type,
+                ...(item.locations || []).map(
+                    location => location.name
+                )
+            ].join(" ").toLowerCase();
+
+            return (
+                (!query || haystack.includes(query)) &&
+                (!selectedType ||
+                    item.event_type === selectedType) &&
+                (!selectedStatus ||
+                    item.status === selectedStatus)
+            );
+        });
+
+        stats.textContent =
+            intelligence.summary.candidates + " candidatos · " +
+            intelligence.summary.clusters + " grupos · " +
+            intelligence.summary.possible_relationships +
+            " relaciones posibles · " +
+            intelligence.summary.source_domains +
+            " dominios de origen · " +
+            filtered.length + " visibles";
+
+        if (!filtered.length) {
+            list.appendChild(
+                element(
+                    "p",
+                    "",
+                    "No hay candidatos que coincidan con los filtros."
+                )
+            );
+        }
+
+        filtered.forEach(item => {
+            const card = element("article", "v4-card");
+
+            tag(card, item.event_label || item.event_type);
+            tag(card, item.status || "PENDIENTE");
+            tag(card, "NO VERIFICADO");
+
+            card.appendChild(
+                element("h3", "", item.title)
+            );
+
+            const meta = element("div", "v4-meta");
+
+            meta.textContent =
+                "Publicación: " +
+                (item.publication_date || "Sin fecha") +
+                " · Artículos asociados: " +
+                (item.article_ids || []).length;
+
+            card.appendChild(meta);
+
+            const coverage = item.coverage || {};
+
+            card.appendChild(
+                element(
+                    "div",
+                    "v4-meta",
+                    "Fragmentos: " +
+                    (coverage.evidence_fragments || 0) +
+                    " · Dominios: " +
+                    (coverage.source_domains || 0) +
+                    " · Relaciones posibles: " +
+                    (item.related_candidates || []).length
+                )
+            );
+
+            const places = item.locations || [];
+
+            if (places.length) {
+                const placeLine = element(
+                    "div",
+                    "v4-meta",
+                    "Localidades mencionadas: " +
+                    places.map(place => place.name).join(", ") +
+                    " (no verificadas)"
+                );
+
+                card.appendChild(placeLine);
+            }
+
+            const details = element("details");
+            details.appendChild(
+                element(
+                    "summary",
+                    "",
+                    "Consultar evidencias y fuentes"
+                )
+            );
+
+            const evidence = item.evidence || [];
+
+            if (!evidence.length) {
+                details.appendChild(
+                    element(
+                        "p",
+                        "v4-meta",
+                        "No se han extraído fragmentos."
+                    )
+                );
+            }
+
+            evidence.forEach(fragment => {
+                details.appendChild(
+                    element(
+                        "div",
+                        "v4-evidence",
+                        fragment.text || ""
+                    )
+                );
+            });
+
+            const dates = item.mentioned_dates || [];
+
+            if (dates.length) {
+                details.appendChild(
+                    element(
+                        "p",
+                        "v4-meta",
+                        "Fechas mencionadas (no verificadas): " +
+                        dates.join(", ")
+                    )
+                );
+            }
+
+            const related = item.related_candidates || [];
+
+            if (related.length) {
+                details.appendChild(
+                    element(
+                        "p",
+                        "v4-meta",
+                        "Candidatos posiblemente relacionados: " +
+                        related.map(
+                            relation =>
+                                "#" + relation.candidate_id +
+                                " (" +
+                                Math.round(
+                                    relation.similarity * 100
+                                ) + "%)"
+                        ).join(", ")
+                    )
+                );
+            }
+
+            const links = element("div", "v4-meta");
+
+            (item.source_urls || []).forEach(url => {
+                safeLink(links, url);
+            });
+
+            details.appendChild(links);
+            card.appendChild(details);
+            list.appendChild(card);
+        });
+    }
+
+    async function load() {
+        try {
+            const response = await fetch(
+                "/api/intelligence-v4",
+                {cache: "no-store"}
+            );
+
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status);
+            }
+
+            intelligence = await response.json();
+
+            const types = [
+                ...new Set(
+                    intelligence.candidates.map(
+                        item => item.event_type
+                    )
+                )
+            ].sort();
+
+            typeFilter.replaceChildren(
+                element("option", "", "Todos los tipos")
+            );
+            typeFilter.firstChild.value = "";
+
+            types.forEach(type => {
+                const option = element("option", "", type);
+                option.value = type;
+                typeFilter.appendChild(option);
+            });
+
+            render();
+        } catch (error) {
+            stats.textContent =
+                "Error al cargar inteligencia: " + error.message;
+        }
+    }
+
+    function openPanel() {
+        panel.style.display = "flex";
+        panel.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+        load();
+        search.focus();
+    }
+
+    function closePanel() {
+        panel.style.display = "none";
+        panel.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+        launcher.focus();
+    }
+
+    launcher.addEventListener("click", openPanel);
+    close.addEventListener("click", closePanel);
+
+    search.addEventListener("input", render);
+    typeFilter.addEventListener("change", render);
+    statusFilter.addEventListener("change", render);
+
+    document.addEventListener("keydown", event => {
+        if (
+            event.key === "Escape" &&
+            panel.style.display === "flex"
+        ) {
+            closePanel();
+        }
+    });
+})();
+</script>
+
 </body>
 </html>

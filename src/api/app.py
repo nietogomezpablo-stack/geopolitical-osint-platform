@@ -400,6 +400,37 @@ def get_event_candidates():
     })
 
 
+
+
+@app.route("/api/intelligence-v4")
+def meridian_intelligence_v4():
+    import json
+    from pathlib import Path
+    from flask import jsonify
+
+    root = Path(__file__).resolve().parents[2]
+    path = root / "data/processed/event_intelligence_v4.json"
+
+    if not path.exists():
+        return jsonify({
+            "version": 4,
+            "country": "Niger",
+            "summary": {
+                "candidates": 0,
+                "clusters": 0,
+                "possible_relationships": 0,
+                "source_domains": 0,
+                "verified_events_created": 0,
+            },
+            "candidates": [],
+            "clusters": [],
+            "relationships": [],
+        })
+
+    return jsonify(
+        json.loads(path.read_text(encoding="utf-8"))
+    )
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",
