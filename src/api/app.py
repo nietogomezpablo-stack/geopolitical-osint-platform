@@ -1922,6 +1922,51 @@ def meridian_v17_summary():
 
     return jsonify(summary())
 
+
+# MERIDIAN_OPERATIONS_V18_V21
+@app.route('/api/operations-v21/status')
+def meridian_operations_status_v21():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+    folder = str(Path(__file__).resolve().parents[1] / 'processing')
+    if folder not in sys.path: sys.path.insert(0, folder)
+    from meridian_operations_v18_v21 import health
+    return jsonify(health())
+
+@app.route('/api/operations-v21/runs')
+def meridian_operations_runs_v21():
+    import sys
+    from pathlib import Path
+    from flask import jsonify, request
+    folder = str(Path(__file__).resolve().parents[1] / 'processing')
+    if folder not in sys.path: sys.path.insert(0, folder)
+    from meridian_operations_v18_v21 import history
+    try: limit = int(request.args.get('limit', 50))
+    except ValueError: return jsonify({'error':'limit inválido'}), 400
+    return jsonify({'country':'Niger', 'runs':history(limit=limit)})
+
+@app.route('/api/operations-v21/report.json')
+def meridian_operations_report_v21():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+    folder = str(Path(__file__).resolve().parents[1] / 'processing')
+    if folder not in sys.path: sys.path.insert(0, folder)
+    from meridian_operations_v18_v21 import report
+    return jsonify(report())
+
+@app.route('/api/operations-v21/report.csv')
+def meridian_operations_csv_v21():
+    import sys
+    from pathlib import Path
+    from flask import Response
+    folder = str(Path(__file__).resolve().parents[1] / 'processing')
+    if folder not in sys.path: sys.path.insert(0, folder)
+    from meridian_operations_v18_v21 import report_csv
+    return Response(report_csv(), mimetype='text/csv; charset=utf-8',
+        headers={'Content-Disposition':'attachment; filename=meridian_niger_operations.csv'})
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",

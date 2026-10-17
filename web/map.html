@@ -849,7 +849,7 @@ load(true);
         }
     }
 
-    
+
     content.style.display = "none";
     toggle.textContent = "+";
 
@@ -5391,6 +5391,46 @@ load(true);
     load().catch(error => {
         summary.textContent = error.message;
     });
+})();
+</script>
+
+
+<section id="meridian-operations-v21" style="background:#102337;color:#e1edfa;border:1px solid #35546d;border-radius:8px;padding:12px;margin:12px 20px;font:12px Arial,sans-serif">
+  <h3 style="font-size:14px;margin:0 0 10px">Operaciones V18–V21 · Níger</h3>
+  <p id="meridian-ops-status">Consultando estado operativo...</p>
+  <button id="meridian-ops-refresh" type="button">Actualizar</button>
+  <a href="/api/operations-v21/report.json" style="color:#bddfff;margin-left:12px">Informe JSON</a>
+  <a href="/api/operations-v21/report.csv" style="color:#bddfff;margin-left:12px">Informe CSV</a>
+  <div id="meridian-ops-history"></div>
+</section>
+<script id="meridian-operations-v21-script">
+(function(){
+  'use strict';
+  const status = document.getElementById('meridian-ops-status');
+  const history = document.getElementById('meridian-ops-history');
+  async function refresh(){
+    try {
+      const [a,b] = await Promise.all([
+        fetch('/api/operations-v21/status',{cache:'no-store'}),
+        fetch('/api/operations-v21/runs',{cache:'no-store'})
+      ]);
+      if(!a.ok || !b.ok) throw Error('No se pudo consultar el servidor');
+      const state = await a.json(), runs = await b.json();
+      status.textContent = 'Estado: '+state.status+' · '+state.issues.map(x=>x.message).join(' · ');
+      history.replaceChildren();
+      for(const run of runs.runs){
+        const row=document.createElement('p');
+        row.textContent='#'+run.id+' · '+run.started_at+' · '+run.status+
+          ' · pipeline: '+run.pipeline_status+' · alertas: '+run.alert_status;
+        history.appendChild(row);
+      }
+      if(!runs.runs.length) history.textContent='Todavía no hay ejecuciones registradas.';
+    } catch(err) { status.textContent='Error: '+err.message; }
+  }
+  document.getElementById('meridian-ops-refresh').addEventListener('click',refresh);
+  const previous=document.getElementById('meridian-triage-alerts-v17');
+  if(previous) previous.insertAdjacentElement('afterend',document.getElementById('meridian-operations-v21'));
+  refresh();
 })();
 </script>
 
