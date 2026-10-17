@@ -2375,5 +2375,243 @@ load(true);
 })();
 </script>
 
+
+<style id="meridian-alerts-v6-style">
+#meridian-alerts-v6 {
+    background: #102337;
+    border: 1px solid #35546d;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 12px 20px;
+    color: #e1edfa;
+    font: 12px Arial, sans-serif;
+}
+
+#meridian-alerts-v6 h3 {
+    font-size: 14px;
+    margin: 0 0 10px;
+}
+
+#meridian-alerts-v6 button {
+    background: #1b344d;
+    color: #e6f2ff;
+    border: 1px solid #456b8c;
+    border-radius: 5px;
+    padding: 7px;
+    margin: 0 7px 8px 0;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+#meridian-alerts-v6 .alert-v6-item {
+    border-top: 1px solid #2e4c66;
+    padding: 9px 0;
+}
+
+#meridian-alerts-v6 .alert-v6-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+#meridian-alerts-v6 .alert-v6-meta {
+    color: #a9c7dd;
+    font-size: 11px;
+    margin-bottom: 6px;
+}
+</style>
+
+<section id="meridian-alerts-v6">
+    <h3>Centro de alertas OSINT · Níger</h3>
+
+    <div id="meridian-alerts-v6-summary">
+        Cargando alertas...
+    </div>
+
+    <div style="margin-top:10px">
+        <button id="meridian-alerts-v6-refresh">
+            Actualizar alertas
+        </button>
+
+        <button id="meridian-alerts-v6-sync">
+            Analizar cambios
+        </button>
+
+        <button id="meridian-alerts-v6-unread">
+            Mostrar solo no leídas
+        </button>
+    </div>
+
+    <div id="meridian-alerts-v6-list"></div>
+</section>
+
+<script id="meridian-alerts-v6-script">
+(function () {
+    "use strict";
+
+    const summary = document.getElementById(
+        "meridian-alerts-v6-summary"
+    );
+
+    const list = document.getElementById(
+        "meridian-alerts-v6-list"
+    );
+
+    let unreadOnly = false;
+
+    function element(tag, value) {
+        const node = document.createElement(tag);
+
+        if (value !== undefined) {
+            node.textContent = String(value);
+        }
+
+        return node;
+    }
+
+    async function load() {
+        const response = await fetch(
+            "/api/intelligence-v6/alerts" +
+            (unreadOnly ? "?unread=1" : ""),
+            {cache: "no-store"}
+        );
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        const data = await response.json();
+
+        summary.textContent =
+            data.total + " alertas · " +
+            data.unread + " sin leer";
+
+        list.replaceChildren();
+
+        data.alerts.forEach(alert => {
+            const row = element("div");
+            row.className = "alert-v6-item";
+
+            const title = element(
+                "div",
+                alert.title
+            );
+            title.className = "alert-v6-title";
+
+            const meta = element(
+                "div",
+                alert.severity +
+                " · " +
+                alert.alert_type +
+                " · " +
+                alert.created_at
+            );
+            meta.className = "alert-v6-meta";
+
+            const description = element(
+                "div",
+                alert.description
+            );
+            description.className = "alert-v6-meta";
+
+            const button = element(
+                "button",
+                alert.is_read
+                    ? "Marcar no leída"
+                    : "Marcar leída"
+            );
+
+            button.addEventListener("click", async () => {
+                const response = await fetch(
+                    "/api/intelligence-v6/alerts/" +
+                    alert.id +
+                    "/read",
+                    {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            is_read: !Boolean(alert.is_read)
+                        })
+                    }
+                );
+
+                if (response.ok) {
+                    await load();
+                }
+            });
+
+            row.append(
+                title,
+                meta,
+                description,
+                button
+            );
+
+            list.appendChild(row);
+        });
+
+        if (!data.alerts.length) {
+            list.appendChild(
+                element("div", "No hay alertas.")
+            );
+        }
+    }
+
+    document.getElementById(
+        "meridian-alerts-v6-refresh"
+    ).addEventListener("click", () => {
+        load().catch(error => {
+            summary.textContent = error.message;
+        });
+    });
+
+    document.getElementById(
+        "meridian-alerts-v6-sync"
+    ).addEventListener("click", async () => {
+        try {
+            const response = await fetch(
+                "/api/intelligence-v6/alerts/synchronize",
+                {method: "POST"}
+            );
+
+            if (!response.ok) {
+                throw new Error("Error al analizar cambios");
+            }
+
+            await load();
+
+        } catch (error) {
+            summary.textContent = error.message;
+        }
+    });
+
+    document.getElementById(
+        "meridian-alerts-v6-unread"
+    ).addEventListener("click", () => {
+        unreadOnly = !unreadOnly;
+
+        load().catch(error => {
+            summary.textContent = error.message;
+        });
+    });
+
+    const analysis = document.getElementById(
+        "meridian-analysis-v5"
+    );
+
+    if (analysis) {
+        analysis.insertAdjacentElement(
+            "afterend",
+            document.getElementById("meridian-alerts-v6")
+        );
+    }
+
+    load().catch(error => {
+        summary.textContent = error.message;
+    });
+})();
+</script>
+
 </body>
 </html>

@@ -605,6 +605,97 @@ def meridian_intelligence_v5_json():
         },
     )
 
+
+
+@app.route("/api/intelligence-v6/alerts", methods=["GET"])
+def meridian_v6_alerts():
+    import sys
+    from pathlib import Path
+    from flask import jsonify, request
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_alerts_v6 import list_alerts
+
+    unread = request.args.get("unread") == "1"
+
+    return jsonify(list_alerts(unread_only=unread))
+
+
+@app.route(
+    "/api/intelligence-v6/alerts/synchronize",
+    methods=["POST"]
+)
+def meridian_v6_synchronize():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_alerts_v6 import synchronize
+
+    return jsonify(synchronize())
+
+
+@app.route(
+    "/api/intelligence-v6/alerts/<int:alert_id>/read",
+    methods=["PUT"]
+)
+def meridian_v6_mark_read(alert_id):
+    import sys
+    from pathlib import Path
+    from flask import jsonify, request
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_alerts_v6 import mark_read
+
+    payload = request.get_json(silent=True)
+
+    if not isinstance(payload, dict):
+        return jsonify({
+            "error": "Se requiere JSON válido"
+        }), 400
+
+    is_read = payload.get("is_read", True)
+
+    if not isinstance(is_read, bool):
+        return jsonify({
+            "error": "is_read debe ser booleano"
+        }), 400
+
+    updated = mark_read(alert_id, is_read)
+
+    if not updated:
+        return jsonify({
+            "error": "Alerta no encontrada"
+        }), 404
+
+    return jsonify({
+        "id": alert_id,
+        "is_read": is_read,
+        "updated": True,
+    })
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",
