@@ -4537,5 +4537,380 @@ load(true);
 })();
 </script>
 
+
+<style id="meridian-casework-v15-style">
+#meridian-casework-v15 {
+    background:#102337;
+    border:1px solid #35546d;
+    border-radius:8px;
+    padding:12px;
+    margin:12px 20px;
+    color:#e1edfa;
+    font:12px Arial,sans-serif;
+}
+
+#meridian-casework-v15 h3 {
+    font-size:14px;
+    margin:0 0 10px;
+}
+
+#meridian-casework-v15 button,
+#meridian-casework-v15 select,
+#meridian-casework-v15 input,
+#meridian-casework-v15 textarea {
+    background:#1b344d;
+    color:#e6f2ff;
+    border:1px solid #456b8c;
+    border-radius:5px;
+    padding:7px;
+    margin:4px 6px 8px 0;
+    font-size:12px;
+    box-sizing:border-box;
+}
+
+#meridian-casework-v15 button {
+    cursor:pointer;
+}
+
+#meridian-casework-v15 input,
+#meridian-casework-v15 textarea {
+    width:100%;
+}
+
+#meridian-casework-v15 textarea {
+    min-height:55px;
+    resize:vertical;
+}
+
+#meridian-casework-v15 .v15-row {
+    border-top:1px solid #2e4c66;
+    padding:9px 0;
+}
+
+#meridian-casework-v15 .v15-title {
+    font-weight:bold;
+    margin-bottom:5px;
+}
+
+#meridian-casework-v15 .v15-meta {
+    color:#aac6da;
+    font-size:11px;
+    line-height:1.5;
+}
+</style>
+
+<section id="meridian-casework-v15">
+    <h3>Expedientes de investigación · Níger</h3>
+
+    <div id="meridian-v15-summary">
+        Cargando expedientes...
+    </div>
+
+    <div>
+        <input
+            id="meridian-v15-key"
+            placeholder="Identificador del candidato"
+        >
+
+        <textarea
+            id="meridian-v15-notes"
+            placeholder="Notas del analista"
+        ></textarea>
+
+        <button id="meridian-v15-save-notes">
+            Guardar notas
+        </button>
+
+        <input
+            id="meridian-v15-task-title"
+            placeholder="Nueva tarea de investigación"
+        >
+
+        <textarea
+            id="meridian-v15-task-description"
+            placeholder="Descripción de la tarea"
+        ></textarea>
+
+        <select id="meridian-v15-priority">
+            <option value="high">Alta</option>
+            <option value="medium" selected>Media</option>
+            <option value="low">Baja</option>
+        </select>
+
+        <input
+            id="meridian-v15-source"
+            placeholder="Referencia documental"
+        >
+
+        <button id="meridian-v15-create-task">
+            Crear tarea
+        </button>
+
+        <button id="meridian-v15-refresh">
+            Actualizar expedientes
+        </button>
+    </div>
+
+    <div id="meridian-v15-list"></div>
+</section>
+
+<script id="meridian-casework-v15-script">
+(function () {
+    "use strict";
+
+    const summary = document.getElementById(
+        "meridian-v15-summary"
+    );
+
+    const list = document.getElementById(
+        "meridian-v15-list"
+    );
+
+    function element(tag, value) {
+        const node = document.createElement(tag);
+
+        if (value !== undefined) {
+            node.textContent = String(value);
+        }
+
+        return node;
+    }
+
+    async function load() {
+        const responses = await Promise.all([
+            fetch(
+                "/api/intelligence-v15/summary",
+                {cache:"no-store"}
+            ),
+            fetch(
+                "/api/intelligence-v15/cases",
+                {cache:"no-store"}
+            )
+        ]);
+
+        if (!responses.every(response => response.ok)) {
+            throw new Error("Error consultando expedientes");
+        }
+
+        const status = await responses[0].json();
+        const data = await responses[1].json();
+
+        summary.textContent =
+            status.total_cases +
+            " expedientes · " +
+            status.task_status_counts.pending +
+            " tareas pendientes · " +
+            status.task_status_counts.in_progress +
+            " en curso · " +
+            status.task_status_counts.completed +
+            " completadas";
+
+        list.replaceChildren();
+
+        data.cases.forEach(caseItem => {
+            const row = element("div");
+            row.className = "v15-row";
+
+            const title = element(
+                "div",
+                caseItem.candidate_key
+            );
+            title.className = "v15-title";
+
+            const meta = element(
+                "div",
+                caseItem.total_tasks +
+                " tareas · " +
+                (caseItem.pending_tasks || 0) +
+                " pendientes"
+            );
+            meta.className = "v15-meta";
+
+            const notes = element(
+                "div",
+                caseItem.analyst_notes || "Sin notas"
+            );
+            notes.className = "v15-meta";
+
+            const open = element(
+                "button",
+                "Abrir expediente"
+            );
+
+            open.addEventListener("click", async () => {
+                try {
+                    const response = await fetch(
+                        "/api/intelligence-v15/cases/" +
+                        encodeURIComponent(
+                            caseItem.candidate_key
+                        )
+                    );
+
+                    if (!response.ok) {
+                        throw new Error(
+                            "No se pudo abrir el expediente"
+                        );
+                    }
+
+                    const data = await response.json();
+
+                    document.getElementById(
+                        "meridian-v15-key"
+                    ).value = caseItem.candidate_key;
+
+                    document.getElementById(
+                        "meridian-v15-notes"
+                    ).value = data.case
+                        ? data.case.analyst_notes
+                        : "";
+
+                    summary.textContent =
+                        "Expediente: " +
+                        caseItem.candidate_key +
+                        " · " +
+                        data.tasks.length +
+                        " tareas · " +
+                        data.history.length +
+                        " movimientos registrados";
+
+                } catch (error) {
+                    summary.textContent = error.message;
+                }
+            });
+
+            row.append(
+                title,
+                meta,
+                notes,
+                open
+            );
+
+            list.appendChild(row);
+        });
+
+        if (!data.cases.length) {
+            list.appendChild(
+                element(
+                    "div",
+                    "Todavía no hay expedientes registrados."
+                )
+            );
+        }
+    }
+
+    async function send(url, method, payload) {
+        const response = await fetch(url, {
+            method:method,
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                result.error ||
+                "No se pudo guardar"
+            );
+        }
+
+        return result;
+    }
+
+    document.getElementById(
+        "meridian-v15-save-notes"
+    ).addEventListener("click", async () => {
+        const key = document.getElementById(
+            "meridian-v15-key"
+        ).value.trim();
+
+        const notes = document.getElementById(
+            "meridian-v15-notes"
+        ).value;
+
+        try {
+            await send(
+                "/api/intelligence-v15/cases/" +
+                encodeURIComponent(key) +
+                "/notes",
+                "PUT",
+                {notes:notes}
+            );
+
+            await load();
+
+        } catch (error) {
+            summary.textContent = error.message;
+        }
+    });
+
+    document.getElementById(
+        "meridian-v15-create-task"
+    ).addEventListener("click", async () => {
+        const payload = {
+            candidate_key:document.getElementById(
+                "meridian-v15-key"
+            ).value.trim(),
+
+            title:document.getElementById(
+                "meridian-v15-task-title"
+            ).value.trim(),
+
+            description:document.getElementById(
+                "meridian-v15-task-description"
+            ).value,
+
+            priority:document.getElementById(
+                "meridian-v15-priority"
+            ).value,
+
+            source_reference:document.getElementById(
+                "meridian-v15-source"
+            ).value
+        };
+
+        try {
+            await send(
+                "/api/intelligence-v15/tasks",
+                "POST",
+                payload
+            );
+
+            await load();
+
+        } catch (error) {
+            summary.textContent = error.message;
+        }
+    });
+
+    document.getElementById(
+        "meridian-v15-refresh"
+    ).addEventListener("click", () => {
+        load().catch(error => {
+            summary.textContent = error.message;
+        });
+    });
+
+    const audit = document.getElementById(
+        "meridian-audit-v14"
+    );
+
+    if (audit) {
+        audit.insertAdjacentElement(
+            "afterend",
+            document.getElementById(
+                "meridian-casework-v15"
+            )
+        );
+    }
+
+    load().catch(error => {
+        summary.textContent = error.message;
+    });
+})();
+</script>
+
 </body>
 </html>

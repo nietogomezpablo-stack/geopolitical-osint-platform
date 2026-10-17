@@ -1544,6 +1544,178 @@ def meridian_v14_export():
         },
     )
 
+
+
+@app.route("/api/intelligence-v15/cases")
+def meridian_v15_cases():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_casework_v15 import list_cases
+
+    return jsonify(list_cases())
+
+
+@app.route("/api/intelligence-v15/cases/<path:key>")
+def meridian_v15_get_case(key):
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_casework_v15 import get_case
+
+    try:
+        result = get_case(key)
+
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+
+    return jsonify(result)
+
+
+@app.route("/api/intelligence-v15/cases/<path:key>/notes", methods=["PUT"])
+def meridian_v15_update_notes(key):
+    import sys
+    from pathlib import Path
+    from flask import jsonify, request
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_casework_v15 import update_notes
+
+    payload = request.get_json(silent=True)
+
+    if not isinstance(payload, dict):
+        return jsonify({"error": "JSON inválido"}), 400
+
+    try:
+        result = update_notes(
+            key,
+            payload.get("notes"),
+        )
+
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+
+    return jsonify(result)
+
+
+@app.route("/api/intelligence-v15/tasks", methods=["POST"])
+def meridian_v15_create_task():
+    import sys
+    from pathlib import Path
+    from flask import jsonify, request
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_casework_v15 import create_task
+
+    payload = request.get_json(silent=True)
+
+    if not isinstance(payload, dict):
+        return jsonify({"error": "JSON inválido"}), 400
+
+    try:
+        result = create_task(
+            payload.get("candidate_key"),
+            payload.get("title"),
+            payload.get("description", ""),
+            payload.get("priority", "medium"),
+            payload.get("source_reference", ""),
+        )
+
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+
+    return jsonify(result), 201
+
+
+@app.route("/api/intelligence-v15/tasks/<int:task_id>", methods=["PUT"])
+def meridian_v15_update_task(task_id):
+    import sys
+    from pathlib import Path
+    from flask import jsonify, request
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_casework_v15 import update_task
+
+    payload = request.get_json(silent=True)
+
+    if not isinstance(payload, dict):
+        return jsonify({"error": "JSON inválido"}), 400
+
+    try:
+        result = update_task(
+            task_id,
+            payload.get("status"),
+            payload.get("priority"),
+        )
+
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+
+    if result is None:
+        return jsonify({
+            "error": "Tarea no encontrada"
+        }), 404
+
+    return jsonify(result)
+
+
+@app.route("/api/intelligence-v15/summary")
+def meridian_v15_summary():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_casework_v15 import summary
+
+    return jsonify(summary())
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",
