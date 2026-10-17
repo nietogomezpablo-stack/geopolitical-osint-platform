@@ -1413,6 +1413,137 @@ def meridian_v13_export_csv():
         },
     )
 
+
+
+@app.route("/api/intelligence-v14/audits")
+def meridian_v14_audits():
+    import sys
+    from pathlib import Path
+    from flask import jsonify, request
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_audit_v14 import list_audits
+
+    key = request.args.get("candidate_key")
+
+    return jsonify(list_audits(key))
+
+
+@app.route("/api/intelligence-v14/audits", methods=["POST"])
+def meridian_v14_update_audit():
+    import sys
+    from pathlib import Path
+    from flask import jsonify, request
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_audit_v14 import update_audit
+
+    payload = request.get_json(silent=True)
+
+    if not isinstance(payload, dict):
+        return jsonify({
+            "error": "JSON inválido"
+        }), 400
+
+    try:
+        result = update_audit(
+            payload.get("candidate_key"),
+            payload.get("check_code"),
+            payload.get("status"),
+            payload.get("notes", ""),
+            payload.get("source_reference", ""),
+        )
+
+    except ValueError as error:
+        return jsonify({
+            "error": str(error)
+        }), 400
+
+    return jsonify(result)
+
+
+@app.route("/api/intelligence-v14/audits/<path:key>/history")
+def meridian_v14_audit_history(key):
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_audit_v14 import audit_history
+
+    return jsonify(audit_history(key))
+
+
+@app.route("/api/intelligence-v14/summary")
+def meridian_v14_audit_summary():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_audit_v14 import audit_summary
+
+    return jsonify(audit_summary())
+
+
+@app.route("/api/intelligence-v14/export.json")
+def meridian_v14_export():
+    import sys
+    import json
+    from pathlib import Path
+    from flask import Response
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_audit_v14 import list_audits
+
+    return Response(
+        json.dumps(
+            list_audits(),
+            ensure_ascii=False,
+            indent=2,
+        ),
+        mimetype="application/json",
+        headers={
+            "Content-Disposition":
+                "attachment; filename=meridian_niger_audits.json"
+        },
+    )
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",

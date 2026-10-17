@@ -4231,5 +4231,311 @@ load(true);
 })();
 </script>
 
+
+<style id="meridian-audit-v14-style">
+#meridian-audit-v14 {
+    background:#102337;
+    border:1px solid #35546d;
+    border-radius:8px;
+    padding:12px;
+    margin:12px 20px;
+    color:#e1edfa;
+    font:12px Arial,sans-serif;
+}
+
+#meridian-audit-v14 h3 {
+    font-size:14px;
+    margin:0 0 10px;
+}
+
+#meridian-audit-v14 button,
+#meridian-audit-v14 select,
+#meridian-audit-v14 input,
+#meridian-audit-v14 textarea,
+#meridian-audit-v14 a {
+    background:#1b344d;
+    color:#e6f2ff;
+    border:1px solid #456b8c;
+    border-radius:5px;
+    padding:7px;
+    margin:4px 6px 8px 0;
+    font-size:12px;
+    box-sizing:border-box;
+}
+
+#meridian-audit-v14 button {
+    cursor:pointer;
+}
+
+#meridian-audit-v14 input,
+#meridian-audit-v14 textarea {
+    width:100%;
+}
+
+#meridian-audit-v14 textarea {
+    min-height:55px;
+    resize:vertical;
+}
+
+#meridian-audit-v14 .v14-row {
+    border-top:1px solid #2e4c66;
+    padding:9px 0;
+}
+
+#meridian-audit-v14 .v14-title {
+    font-weight:bold;
+    margin-bottom:5px;
+}
+
+#meridian-audit-v14 .v14-meta {
+    color:#aac6da;
+    font-size:11px;
+    line-height:1.5;
+}
+</style>
+
+<section id="meridian-audit-v14">
+    <h3>Auditoría de evidencias · Níger</h3>
+
+    <div id="meridian-v14-summary">
+        Cargando auditorías...
+    </div>
+
+    <div>
+        <input
+            id="meridian-v14-key"
+            placeholder="Identificador del candidato"
+        >
+
+        <select id="meridian-v14-check">
+            <option value="source_identified">
+                Fuente identificada
+            </option>
+            <option value="article_associated">
+                Artículo asociado
+            </option>
+            <option value="date_mentioned">
+                Fecha mencionada
+            </option>
+            <option value="event_date_verified">
+                Fecha verificada
+            </option>
+            <option value="location_mentioned">
+                Ubicación mencionada
+            </option>
+            <option value="event_location_verified">
+                Ubicación verificada
+            </option>
+            <option value="multiple_domains_identified">
+                Varios dominios
+            </option>
+        </select>
+
+        <select id="meridian-v14-status">
+            <option value="pending">Pendiente</option>
+            <option value="supported">Respaldada</option>
+            <option value="contradicted">Contradicha</option>
+            <option value="insufficient">Insuficiente</option>
+        </select>
+
+        <textarea
+            id="meridian-v14-notes"
+            placeholder="Justificación de la decisión"
+        ></textarea>
+
+        <input
+            id="meridian-v14-source"
+            placeholder="Referencia documental"
+        >
+
+        <button id="meridian-v14-save">
+            Guardar auditoría
+        </button>
+
+        <button id="meridian-v14-refresh">
+            Actualizar
+        </button>
+
+        <a href="/api/intelligence-v14/export.json">
+            Exportar JSON
+        </a>
+    </div>
+
+    <div id="meridian-v14-list"></div>
+</section>
+
+<script id="meridian-audit-v14-script">
+(function () {
+    "use strict";
+
+    const summary = document.getElementById(
+        "meridian-v14-summary"
+    );
+
+    const list = document.getElementById(
+        "meridian-v14-list"
+    );
+
+    function element(tag, value) {
+        const node = document.createElement(tag);
+
+        if (value !== undefined) {
+            node.textContent = String(value);
+        }
+
+        return node;
+    }
+
+    async function load() {
+        const responses = await Promise.all([
+            fetch(
+                "/api/intelligence-v14/summary",
+                {cache:"no-store"}
+            ),
+            fetch(
+                "/api/intelligence-v14/audits",
+                {cache:"no-store"}
+            )
+        ]);
+
+        if (!responses.every(response => response.ok)) {
+            throw new Error("Error consultando auditorías");
+        }
+
+        const status = await responses[0].json();
+        const data = await responses[1].json();
+
+        summary.textContent =
+            status.audited_candidates +
+            " candidatos auditados · " +
+            status.status_counts.supported +
+            " comprobaciones respaldadas · " +
+            status.status_counts.contradicted +
+            " contradichas · " +
+            status.status_counts.pending +
+            " pendientes";
+
+        list.replaceChildren();
+
+        data.audits.forEach(audit => {
+            const row = element("div");
+            row.className = "v14-row";
+
+            const title = element(
+                "div",
+                audit.candidate_key +
+                " · " +
+                audit.check_code
+            );
+            title.className = "v14-title";
+
+            const meta = element(
+                "div",
+                audit.status +
+                " · " +
+                audit.updated_at
+            );
+            meta.className = "v14-meta";
+
+            const notes = element(
+                "div",
+                audit.analyst_notes || "Sin notas"
+            );
+            notes.className = "v14-meta";
+
+            row.append(title, meta, notes);
+            list.appendChild(row);
+        });
+
+        if (!data.audits.length) {
+            list.appendChild(
+                element(
+                    "div",
+                    "Todavía no hay auditorías registradas."
+                )
+            );
+        }
+    }
+
+    document.getElementById(
+        "meridian-v14-save"
+    ).addEventListener("click", async () => {
+        const payload = {
+            candidate_key:document.getElementById(
+                "meridian-v14-key"
+            ).value.trim(),
+
+            check_code:document.getElementById(
+                "meridian-v14-check"
+            ).value,
+
+            status:document.getElementById(
+                "meridian-v14-status"
+            ).value,
+
+            notes:document.getElementById(
+                "meridian-v14-notes"
+            ).value,
+
+            source_reference:document.getElementById(
+                "meridian-v14-source"
+            ).value
+        };
+
+        try {
+            const response = await fetch(
+                "/api/intelligence-v14/audits",
+                {
+                    method:"POST",
+                    headers:{
+                        "Content-Type":"application/json"
+                    },
+                    body:JSON.stringify(payload)
+                }
+            );
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.error ||
+                    "No se pudo guardar"
+                );
+            }
+
+            await load();
+
+        } catch (error) {
+            summary.textContent = error.message;
+        }
+    });
+
+    document.getElementById(
+        "meridian-v14-refresh"
+    ).addEventListener("click", () => {
+        load().catch(error => {
+            summary.textContent = error.message;
+        });
+    });
+
+    const verification = document.getElementById(
+        "meridian-verification-v13"
+    );
+
+    if (verification) {
+        verification.insertAdjacentElement(
+            "afterend",
+            document.getElementById(
+                "meridian-audit-v14"
+            )
+        );
+    }
+
+    load().catch(error => {
+        summary.textContent = error.message;
+    });
+})();
+</script>
+
 </body>
 </html>
