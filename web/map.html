@@ -2613,5 +2613,354 @@ load(true);
 })();
 </script>
 
+
+<style id="meridian-search-v7-style">
+#meridian-search-v7 {
+    background: #102337;
+    border: 1px solid #35546d;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 12px 20px;
+    color: #e1edfa;
+    font: 12px Arial, sans-serif;
+}
+
+#meridian-search-v7 h3 {
+    font-size: 14px;
+    margin: 0 0 10px;
+}
+
+#meridian-search-v7 input,
+#meridian-search-v7 select,
+#meridian-search-v7 button {
+    background: #1b344d;
+    color: #e6f2ff;
+    border: 1px solid #456b8c;
+    border-radius: 5px;
+    padding: 7px;
+    font-size: 12px;
+}
+
+#meridian-search-v7 input {
+    min-width: 180px;
+}
+
+#meridian-search-v7 button {
+    cursor: pointer;
+}
+
+#meridian-search-v7 .v7-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 12px;
+}
+
+#meridian-search-v7 .v7-item {
+    border-top: 1px solid #2e4c66;
+    padding: 9px 0;
+}
+
+#meridian-search-v7 .v7-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+#meridian-search-v7 .v7-meta {
+    color: #aac6da;
+    font-size: 11px;
+}
+</style>
+
+<section id="meridian-search-v7">
+    <h3>Buscador avanzado OSINT · Níger</h3>
+
+    <div id="meridian-v7-summary">
+        Cargando...
+    </div>
+
+    <div class="v7-controls" style="margin-top:10px">
+        <input
+            id="meridian-v7-query"
+            type="search"
+            placeholder="Buscar noticias, notas, fuentes..."
+        >
+
+        <select id="meridian-v7-status">
+            <option value="">Todos los estados</option>
+            <option value="pending">Pendiente</option>
+            <option value="investigating">En investigación</option>
+            <option value="reviewed">Revisado</option>
+            <option value="dismissed">Descartado</option>
+        </select>
+
+        <select id="meridian-v7-priority">
+            <option value="">Todas las prioridades</option>
+            <option value="high">Alta</option>
+            <option value="medium">Media</option>
+            <option value="low">Baja</option>
+        </select>
+
+        <select id="meridian-v7-type">
+            <option value="">Todos los tipos</option>
+        </select>
+
+        <select id="meridian-v7-sort">
+            <option value="priority">Ordenar por prioridad</option>
+            <option value="title">Ordenar por título</option>
+            <option value="status">Ordenar por estado</option>
+            <option value="type">Ordenar por tipo</option>
+        </select>
+
+        <button id="meridian-v7-export">
+            Exportar resultados CSV
+        </button>
+    </div>
+
+    <div id="meridian-v7-results"></div>
+
+    <h3 style="margin-top:18px">
+        Cronología de investigaciones
+    </h3>
+
+    <div id="meridian-v7-timeline">
+        Cargando historial...
+    </div>
+</section>
+
+<script id="meridian-search-v7-script">
+(function () {
+    "use strict";
+
+    const root = document.getElementById(
+        "meridian-search-v7"
+    );
+
+    const query = document.getElementById(
+        "meridian-v7-query"
+    );
+
+    const status = document.getElementById(
+        "meridian-v7-status"
+    );
+
+    const priority = document.getElementById(
+        "meridian-v7-priority"
+    );
+
+    const type = document.getElementById(
+        "meridian-v7-type"
+    );
+
+    const sort = document.getElementById(
+        "meridian-v7-sort"
+    );
+
+    const summary = document.getElementById(
+        "meridian-v7-summary"
+    );
+
+    const results = document.getElementById(
+        "meridian-v7-results"
+    );
+
+    const timeline = document.getElementById(
+        "meridian-v7-timeline"
+    );
+
+    function element(tag, value) {
+        const node = document.createElement(tag);
+
+        if (value !== undefined) {
+            node.textContent = String(value);
+        }
+
+        return node;
+    }
+
+    function params() {
+        const values = new URLSearchParams();
+
+        if (query.value.trim()) {
+            values.set("q", query.value.trim());
+        }
+
+        if (status.value) {
+            values.set("status", status.value);
+        }
+
+        if (priority.value) {
+            values.set("priority", priority.value);
+        }
+
+        if (type.value) {
+            values.set("type", type.value);
+        }
+
+        values.set("sort", sort.value);
+
+        return values;
+    }
+
+    async function search() {
+        const response = await fetch(
+            "/api/intelligence-v7/search?" + params(),
+            {cache: "no-store"}
+        );
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        const data = await response.json();
+
+        summary.textContent =
+            data.total + " resultados encontrados";
+
+        const selectedType = type.value;
+
+        type.replaceChildren(
+            element("option", "Todos los tipos")
+        );
+
+        type.firstChild.value = "";
+
+        data.available_types.forEach(value => {
+            const option = element("option", value);
+            option.value = value;
+            type.appendChild(option);
+        });
+
+        type.value = selectedType;
+
+        results.replaceChildren();
+
+        data.results.forEach(candidate => {
+            const row = element("div");
+            row.className = "v7-item";
+
+            const title = element(
+                "div",
+                candidate.title || "Sin título"
+            );
+            title.className = "v7-title";
+
+            const meta = element(
+                "div",
+                candidate.event_type +
+                " · " +
+                candidate.investigation.status +
+                " · Prioridad: " +
+                candidate.analysis_v5.priority
+            );
+            meta.className = "v7-meta";
+
+            row.append(title, meta);
+            results.appendChild(row);
+        });
+
+        if (!data.results.length) {
+            results.appendChild(
+                element("div", "Sin resultados.")
+            );
+        }
+    }
+
+    async function loadTimeline() {
+        const response = await fetch(
+            "/api/intelligence-v7/timeline",
+            {cache: "no-store"}
+        );
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        const data = await response.json();
+
+        timeline.replaceChildren();
+
+        if (!data.entries.length) {
+            timeline.appendChild(
+                element(
+                    "div",
+                    "Todavía no hay cambios registrados."
+                )
+            );
+            return;
+        }
+
+        data.entries.forEach(entry => {
+            const row = element("div");
+            row.className = "v7-item";
+
+            const title = element(
+                "div",
+                entry.candidate_key
+            );
+            title.className = "v7-title";
+
+            const meta = element(
+                "div",
+                entry.changed_at +
+                " · " +
+                (entry.previous_status || "Nuevo") +
+                " → " +
+                entry.new_status
+            );
+            meta.className = "v7-meta";
+
+            row.append(title, meta);
+            timeline.appendChild(row);
+        });
+    }
+
+    let timer;
+
+    query.addEventListener("input", () => {
+        clearTimeout(timer);
+
+        timer = setTimeout(() => {
+            search().catch(error => {
+                summary.textContent = error.message;
+            });
+        }, 250);
+    });
+
+    [status, priority, type, sort].forEach(control => {
+        control.addEventListener("change", () => {
+            search().catch(error => {
+                summary.textContent = error.message;
+            });
+        });
+    });
+
+    document.getElementById(
+        "meridian-v7-export"
+    ).addEventListener("click", () => {
+        window.location.href =
+            "/api/intelligence-v7/export.csv?" + params();
+    });
+
+    const alerts = document.getElementById(
+        "meridian-alerts-v6"
+    );
+
+    if (alerts) {
+        alerts.insertAdjacentElement(
+            "afterend",
+            root
+        );
+    }
+
+    Promise.all([
+        search(),
+        loadTimeline()
+    ]).catch(error => {
+        summary.textContent = error.message;
+    });
+})();
+</script>
+
 </body>
 </html>

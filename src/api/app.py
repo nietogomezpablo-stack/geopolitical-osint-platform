@@ -696,6 +696,119 @@ def meridian_v6_mark_read(alert_id):
         "updated": True,
     })
 
+
+
+@app.route("/api/intelligence-v7/search")
+def meridian_v7_search():
+    import sys
+    from pathlib import Path
+    from flask import jsonify, request
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_search_v7 import search
+
+    try:
+        result = search(
+            query=request.args.get("q", ""),
+            status=request.args.get("status", ""),
+            priority=request.args.get("priority", ""),
+            event_type=request.args.get("type", ""),
+            sort=request.args.get("sort", "priority"),
+        )
+
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+
+    return jsonify(result)
+
+
+@app.route("/api/intelligence-v7/timeline")
+def meridian_v7_timeline():
+    import sys
+    from pathlib import Path
+    from flask import jsonify, request
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_search_v7 import investigation_timeline
+
+    try:
+        limit = int(request.args.get("limit", 100))
+    except ValueError:
+        return jsonify({"error": "Límite inválido"}), 400
+
+    return jsonify(investigation_timeline(limit))
+
+
+@app.route("/api/intelligence-v7/activity")
+def meridian_v7_activity():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_search_v7 import activity_summary
+
+    return jsonify(activity_summary())
+
+
+@app.route("/api/intelligence-v7/export.csv")
+def meridian_v7_export_csv():
+    import sys
+    from pathlib import Path
+    from flask import Response, jsonify, request
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_search_v7 import search_csv
+
+    try:
+        content = search_csv(
+            query=request.args.get("q", ""),
+            status=request.args.get("status", ""),
+            priority=request.args.get("priority", ""),
+            event_type=request.args.get("type", ""),
+            sort=request.args.get("sort", "priority"),
+        )
+
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+
+    return Response(
+        content,
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition":
+                "attachment; filename=meridian_niger_search.csv"
+        },
+    )
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",
