@@ -5,6 +5,10 @@ from datetime import datetime
 
 PIPELINE_STEPS = [
     (
+        "Recopilación de noticias de Níger",
+        "src/collectors/gdelt_collector.py"
+    ),
+    (
         "Limpieza de datos GDELT",
         "src/processing/clean_gdelt.py"
     ),
@@ -30,7 +34,7 @@ PIPELINE_STEPS = [
     ),
     (
         "Extracción y persistencia de eventos",
-        "src/processing/extract_events.py"
+        "src/processing/build_event_candidates.py"
     ),
     (
         "Geocodificación",
@@ -50,6 +54,7 @@ PIPELINE_STEPS = [
     ),
     (
         "Exportación GeoJSON",
+        "src/processing/export_event_candidates.py"
         "src/processing/export_events_geojson.py"
     ),
     (

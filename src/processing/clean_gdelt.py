@@ -11,8 +11,30 @@ print("Artículos originales:", len(articles))
 
 titulos_vistos = set()
 articles_limpios = []
+articles_descartados = []
+
+def es_irrelevante(article):
+    titulo = article.get("title", "").casefold()
+    url = article.get("url", "").casefold()
+
+    # Nigar es un nombre propio distinto del país Níger.
+    if "nigar" in titulo or "nigar" in url:
+        return True
+
+    # Niger State y FCT son territorios de Nigeria.
+    if "niger state" in titulo or "niger state" in url:
+        return True
+
+    if "fct" in titulo and "police" in titulo:
+        return True
+
+    return False
 
 for article in articles:
+    if es_irrelevante(article):
+        articles_descartados.append(article.get("title", ""))
+        continue
+
     titulo = " ".join(article["title"].split())
 
     if not titulo:
@@ -66,5 +88,9 @@ with open(
     )
 
 print("Artículos después del procesamiento:", len(articles_limpios))
-print("Duplicados eliminados:", len(articles) - len(articles_limpios))
+print("Duplicados eliminados:", len(articles) - len(articles_limpios) - len(articles_descartados))
+print("Noticias irrelevantes descartadas:", len(articles_descartados))
+
+for titulo in articles_descartados:
+    print("DESCARTADA:", titulo)
 print("Datos guardados en: data/processed/gdelt_niger.json")

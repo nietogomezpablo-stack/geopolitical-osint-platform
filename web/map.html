@@ -124,6 +124,62 @@ html[dir="rtl"] .ev{text-align:right}
 html[dir="rtl"] .leaflet-container{direction:ltr}
 @media(max-width:850px){html[dir="rtl"] .stat:nth-child(2){border-left:0}}
 </style>
+
+<style>
+#meridian-candidates-panel {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 320px;
+    max-width: calc(100vw - 40px);
+    max-height: 45vh;
+    overflow-y: auto;
+    background: #111827;
+    color: #f9fafb;
+    border: 1px solid #374151;
+    border-radius: 12px;
+    padding: 16px;
+    z-index: 1000;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+
+#meridian-candidates-panel h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+}
+
+.meridian-candidate {
+    padding: 10px 0;
+    border-bottom: 1px solid #374151;
+}
+
+.meridian-candidate-title {
+    font-size: 13px;
+    line-height: 1.4;
+    margin: 6px 0;
+}
+
+.meridian-candidate-meta {
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+.meridian-candidate-link {
+    color: #93c5fd;
+    font-size: 12px;
+}
+
+#meridian-candidates-toggle {
+    cursor: pointer;
+    float: right;
+    background: transparent;
+    border: 0;
+    color: white;
+    font-size: 18px;
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -601,5 +657,138 @@ document.addEventListener("keydown", ev => {
 load(true);
 })();
 </script>
+
+<div id="meridian-candidates-panel">
+    <button id="meridian-candidates-toggle"
+            aria-label="Ocultar candidatos">−</button>
+    <h3>OSINT · Candidatos por verificar</h3>
+    <div id="meridian-candidates-content">
+        Cargando candidatos...
+    </div>
+</div>
+
+<script>
+(function () {
+    const content = document.getElementById(
+        "meridian-candidates-content"
+    );
+
+    const toggle = document.getElementById(
+        "meridian-candidates-toggle"
+    );
+
+    toggle.addEventListener("click", function () {
+        const hidden = content.style.display === "none";
+        content.style.display = hidden ? "block" : "none";
+        toggle.textContent = hidden ? "−" : "+";
+    });
+
+    function createText(tag, value, className) {
+        const element = document.createElement(tag);
+        element.textContent = value || "";
+        if (className) element.className = className;
+        return element;
+    }
+
+    async function loadCandidates() {
+        try {
+            const response = await fetch(
+                "/api/event-candidates",
+                {cache: "no-store"}
+            );
+
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status);
+            }
+
+            const data = await response.json();
+
+            content.replaceChildren();
+
+            content.appendChild(
+                createText(
+                    "p",
+                    data.count + " candidatos pendientes de revisión",
+                    "meridian-candidate-meta"
+                )
+            );
+
+            for (const candidate of data.candidates || []) {
+                const item = document.createElement("div");
+                item.className = "meridian-candidate";
+
+                item.appendChild(
+                    createText(
+                        "strong",
+                        candidate.event_type,
+                        "meridian-candidate-meta"
+                    )
+                );
+
+                item.appendChild(
+                    createText(
+                        "div",
+                        candidate.title,
+                        "meridian-candidate-title"
+                    )
+                );
+
+                item.appendChild(
+                    createText(
+                        "div",
+                        candidate.status,
+                        "meridian-candidate-meta"
+                    )
+                );
+
+                const sourceCount = (
+                    candidate.source_articles || [candidate.article_id]
+                ).length;
+
+                item.appendChild(
+                    createText(
+                        "div",
+                        sourceCount + " artículo(s) asociado(s)",
+                        "meridian-candidate-meta"
+                    )
+                );
+
+                const urls = candidate.source_urls ||
+                    [candidate.url];
+
+                for (const url of urls) {
+                    if (!url || !/^https?:\/\//i.test(url)) {
+                        continue;
+                    }
+
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.target = "_blank";
+                    link.rel = "noopener noreferrer";
+                    link.textContent = "Consultar fuente ↗";
+                    link.className = "meridian-candidate-link";
+
+                    item.appendChild(link);
+                    item.appendChild(document.createElement("br"));
+                }
+
+                content.appendChild(item);
+            }
+        } catch (error) {
+            content.textContent =
+                "No se pudieron cargar los candidatos: " +
+                error.message;
+        }
+    }
+
+    
+    content.style.display = "none";
+    toggle.textContent = "+";
+
+    loadCandidates();
+    setInterval(loadCandidates, 60000);
+})();
+</script>
+
 </body>
 </html>

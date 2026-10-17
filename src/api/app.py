@@ -366,6 +366,40 @@ def get_graph():
     })
 
 
+
+
+# Candidatos pendientes de revisión: no son acontecimientos confirmados.
+@app.route("/api/event-candidates", methods=["GET"])
+def get_event_candidates():
+    from flask import jsonify
+    import json
+    from pathlib import Path
+
+    candidates_file = Path("data/processed/event_candidates.json")
+
+    if not candidates_file.exists():
+        return jsonify({
+            "count": 0,
+            "candidates": [],
+            "message": "Todavía no se ha generado el archivo de candidatos."
+        })
+
+    try:
+        candidates = json.loads(
+            candidates_file.read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError):
+        return jsonify({
+            "error": "No se pudo leer el archivo de candidatos."
+        }), 500
+
+    return jsonify({
+        "count": len(candidates),
+        "candidates": candidates,
+        "verified": False
+    })
+
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",

@@ -1,47 +1,112 @@
-import requests
 import json
+import sys
 import time
+from pathlib import Path
 
-url = "https://api.gdeltproject.org/api/v2/doc/doc"
+import requests
 
-params = {
+API_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
+OUTPUT = Path("data/raw/gdelt_niger.json")
+
+PARAMS = {
     "query": '"Niger" -Nigeria -"Niger Delta"',
     "mode": "ArtList",
     "maxrecords": 50,
-    "format": "json"
+    "format": "json",
 }
 
-headers = {
-    "User-Agent": "Geopolitical-OSINT-Platform/0.1"
+HEADERS = {
+    "User-Agent": "Meridian-OSINT/0.1"
 }
 
-for intento in range(3):
 
-    response = requests.get(url, params=params, headers=headers)
+def main():
+    print("Meridian OSINT - GDELT Collector - Niger")
 
-    print("Geopolitical OSINT Platform - GDELT Collector")
-    print("Intento:", intento + 1)
-    print("Código HTTP:", response.status_code)
+    for attempt in range(1, 4):
+        try:
+            response = requests.get(
+                API_URL,
+                params=PARAMS,
+                headers=HEADERS,
+                timeout=30,
+            )
 
-    if response.status_code == 200:
-        data = response.json()
+            print(
+                f"Intento {attempt}/3 - "
+                f"HTTP {response.status_code}"
+            )
 
-        with open("data/raw/gdelt_niger.json", "w") as file:
-            json.dump(data, file, indent=4, ensure_ascii=False)
+            if response.status_code == 429:
+                if attempt < 3:
+                    wait = 5 * attempt
+                    print(f"Esperando {wait} segundos...")
+                    time.sleep(wait)
+                    continue
 
-        for article in data["articles"]:
-            print(article["title"])
+                raise RuntimeError(
+                    "GDELT ha limitado las peticiones."
+                )
 
-        break
+            response.raise_for_status()
 
-    elif response.status_code == 429:
-    	if intento < 2:
-        	espera = 5 * (intento + 1)
-        	print("GDELT ha limitado las peticiones. Esperando", espera, "segundos...")
-        	time.sleep(espera)
-    	else:
-        	print("GDELT sigue limitando las peticiones. Se han agotado los intentos.")
+            data = response.json()
+            articles = data.get("articles", [])
 
-    else:
-        print("Error al consultar GDELT:", response.status_code)
-        break
+            if not isinstance(articles, list):
+                raise ValueError(
+                    "Respuesta GDELT inesperada: "
+                    "'articles' no es una lista."
+                )
+
+            if not articles:
+                raise ValueError(
+                    "GDELT no ha devuelto artículos. "
+                    "No se sobrescribirán los datos anteriores."
+                )
+
+            OUTPUT.parent.mkdir(
+                parents=True,
+                exist_ok=True
+            )
+
+            # Escritura temporal para no corromper
+            # el archivo anterior si algo falla.
+            temporary = OUTPUT.with_suffix(".json.tmp")
+
+            with temporary.open(
+                "w",
+                encoding="utf-8"
+            ) as file:
+                json.dump(
+                    data,
+                    file,
+                    indent=4,
+                    ensure_ascii=False
+                )
+
+            temporary.replace(OUTPUT)
+
+            print(f"Noticias descargadas: {len(articles)}")
+            print(f"Guardadas en: {OUTPUT}")
+
+            return
+
+        except (
+            requests.RequestException,
+            ValueError,
+            RuntimeError
+        ) as error:
+            print(f"Error: {error}")
+
+            if attempt < 3:
+                wait = 5 * attempt
+                print(f"Reintentando en {wait} segundos...")
+                time.sleep(wait)
+
+    print("ERROR: No se pudieron descargar noticias.")
+    sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

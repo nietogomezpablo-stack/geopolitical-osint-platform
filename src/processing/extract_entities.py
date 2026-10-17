@@ -7,12 +7,16 @@ modelo_multilingue = spacy.load("xx_ent_wiki_sm")
 connection = sqlite3.connect("data/intelligence.db")
 cursor = connection.cursor()
 
-cursor.execute("DELETE FROM entity_mentions")
-
 cursor.execute("""
-SELECT id, content, language
-FROM articles
-WHERE content IS NOT NULL
+SELECT a.id, a.content, a.language
+FROM articles a
+WHERE a.content IS NOT NULL
+AND NOT EXISTS (
+    SELECT 1
+    FROM article_processing ap
+    WHERE ap.article_id = a.id
+    AND ap.ner_processed = 1
+)
 """)
 
 articles = cursor.fetchall()
@@ -60,6 +64,16 @@ for article_id, content, language in articles:
         )
 
         menciones_detectadas += 1
+
+    cursor.execute(
+        '''
+        INSERT INTO article_processing (article_id, ner_processed)
+        VALUES (?, 1)
+        ON CONFLICT(article_id)
+        DO UPDATE SET ner_processed = 1
+        ''',
+        (article_id,)
+    )
 
 connection.commit()
 connection.close()
