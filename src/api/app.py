@@ -2087,6 +2087,41 @@ def meridian_observability_v33_csv():
     return Response(export_csv(analyze()), mimetype='text/csv; charset=utf-8',
         headers={'Content-Disposition':'attachment; filename=meridian_sources_v33.csv'})
 
+
+@app.route('/api/release-v50/report', methods=['GET'])
+def meridian_release_v50_report():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+    folder = str(Path(__file__).resolve().parents[1] / 'processing')
+    if folder not in sys.path:
+        sys.path.insert(0, folder)
+    from meridian_release_v34_v50 import analyze
+    return jsonify(analyze())
+
+@app.route('/api/release-v50/summary', methods=['GET'])
+def meridian_release_v50_summary():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+    folder = str(Path(__file__).resolve().parents[1] / 'processing')
+    if folder not in sys.path:
+        sys.path.insert(0, folder)
+    from meridian_release_v34_v50 import analyze
+    report = analyze()
+    return jsonify({'country': 'Niger', 'release': 50, 'summary': report['summary']})
+
+@app.route('/api/release-v50/export.csv', methods=['GET'])
+def meridian_release_v50_export_csv():
+    import sys
+    from pathlib import Path
+    from flask import Response
+    folder = str(Path(__file__).resolve().parents[1] / 'processing')
+    if folder not in sys.path:
+        sys.path.insert(0, folder)
+    from meridian_release_v34_v50 import analyze, export_csv
+    return Response(export_csv(analyze()), mimetype='text/csv; charset=utf-8', headers={'Content-Disposition': 'attachment; filename=meridian_release_v50.csv'})
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",

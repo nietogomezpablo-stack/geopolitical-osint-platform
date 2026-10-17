@@ -5682,5 +5682,40 @@ load(true);
 })();
 </script>
 
+
+<style>
+#meridian-release-v50{background:#102337;color:#e5edf6;border:1px solid #36536c;border-radius:9px;padding:14px;margin:12px 20px;font:13px Arial,sans-serif}
+#meridian-release-v50 h3{margin:0 0 10px;font-size:15px}
+#meridian-release-v50 a,#meridian-release-v50 button{background:#1e3a55;color:#e5edf6;border:1px solid #476b8a;border-radius:5px;padding:7px 10px;margin:5px 6px 8px 0;display:inline-block;text-decoration:none;cursor:pointer}
+#meridian-release-v50 .meridian-v50-line{border-top:1px solid #36536c;padding:7px 0}
+</style>
+<section id="meridian-release-v50">
+<h3>Meridian OSINT · Diagnóstico consolidado · Níger</h3>
+<div id="meridian-release-v50-summary">Cargando diagnóstico...</div>
+<button type="button" id="meridian-release-v50-refresh">Actualizar</button>
+<a href="/api/release-v50/report">Informe JSON</a>
+<a href="/api/release-v50/export.csv">Exportar CSV</a>
+<div id="meridian-release-v50-warnings"></div>
+<p>Las alertas son indicios pendientes de revisión, no acontecimientos verificados.</p>
+</section>
+<script>
+(function(){'use strict';
+ const summary=document.getElementById('meridian-release-v50-summary');
+ const warnings=document.getElementById('meridian-release-v50-warnings');
+ async function refresh(){
+  const response=await fetch('/api/release-v50/report',{cache:'no-store'});
+  if(!response.ok)throw Error('No se pudo obtener el informe V50');
+  const report=await response.json(),s=report.summary;
+  summary.textContent='Noticias: '+s.articles+' · Acontecimientos registrados: '+s.events_recorded+' · Alertas activas: '+s.alerts_active+' · Fuentes: '+s.unique_source_domains+' · Duplicados URL: '+s.duplicate_extra_records+' · Integridad SQLite: '+s.sqlite_integrity+' · Última ejecución: '+(s.latest_pipeline_status||'sin datos');
+  warnings.replaceChildren();
+  for(const message of report.warnings){
+   const line=document.createElement('div');line.className='meridian-v50-line';line.textContent='Revisar: '+message;warnings.appendChild(line);
+  }
+ }
+ document.getElementById('meridian-release-v50-refresh').addEventListener('click',()=>refresh().catch(e=>summary.textContent=e.message));
+ refresh().catch(e=>summary.textContent=e.message);
+})();
+</script>
+
 </body>
 </html>
