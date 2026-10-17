@@ -2075,5 +2075,305 @@ load(true);
 })();
 </script>
 
+
+<style id="meridian-analysis-v5-style">
+#meridian-analysis-v5 {
+    background: #102337;
+    border: 1px solid #35546d;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 12px 20px;
+    color: #e1edfa;
+    font: 12px Arial, sans-serif;
+}
+
+#meridian-analysis-v5 h3 {
+    font-size: 14px;
+    margin: 0 0 9px;
+}
+
+#meridian-analysis-v5 input,
+#meridian-analysis-v5 select,
+#meridian-analysis-v5 button {
+    background: #1b344d;
+    color: #e6f2ff;
+    border: 1px solid #456b8c;
+    border-radius: 5px;
+    padding: 7px;
+    font-size: 12px;
+}
+
+#meridian-analysis-v5 input {
+    min-width: 180px;
+}
+
+#meridian-analysis-v5 button {
+    cursor: pointer;
+}
+
+#meridian-analysis-v5 .v5-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 12px;
+}
+
+#meridian-analysis-v5 .v5-item {
+    border-top: 1px solid #2e4c66;
+    padding: 9px 0;
+}
+
+#meridian-analysis-v5 .v5-title {
+    font-weight: bold;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+#meridian-analysis-v5 .v5-meta {
+    font-size: 11px;
+    color: #aac6da;
+    line-height: 1.5;
+}
+
+#meridian-analysis-v5 .v5-summary {
+    margin-bottom: 12px;
+    color: #c9ddec;
+}
+</style>
+
+<section id="meridian-analysis-v5">
+    <h3>Análisis y prioridades OSINT · Níger</h3>
+
+    <div class="v5-summary" id="meridian-v5-summary">
+        Cargando análisis...
+    </div>
+
+    <div class="v5-controls">
+        <input
+            id="meridian-v5-search"
+            type="search"
+            placeholder="Buscar acontecimientos..."
+        >
+
+        <select id="meridian-v5-priority">
+            <option value="">Todas las prioridades</option>
+            <option value="high">Alta</option>
+            <option value="medium">Media</option>
+            <option value="low">Baja</option>
+        </select>
+
+        <select id="meridian-v5-status">
+            <option value="">Todos los estados</option>
+            <option value="pending">Pendiente</option>
+            <option value="investigating">En investigación</option>
+            <option value="reviewed">Revisado</option>
+            <option value="dismissed">Descartado</option>
+        </select>
+
+        <button id="meridian-v5-refresh">
+            Actualizar
+        </button>
+
+        <button id="meridian-v5-csv">
+            Exportar CSV
+        </button>
+
+        <button id="meridian-v5-json">
+            Exportar JSON
+        </button>
+    </div>
+
+    <div id="meridian-v5-results"></div>
+</section>
+
+<script id="meridian-analysis-v5-script">
+(function () {
+    "use strict";
+
+    const root = document.getElementById(
+        "meridian-analysis-v5"
+    );
+
+    const summary = document.getElementById(
+        "meridian-v5-summary"
+    );
+
+    const results = document.getElementById(
+        "meridian-v5-results"
+    );
+
+    const search = document.getElementById(
+        "meridian-v5-search"
+    );
+
+    const priority = document.getElementById(
+        "meridian-v5-priority"
+    );
+
+    const status = document.getElementById(
+        "meridian-v5-status"
+    );
+
+    let candidates = [];
+
+    function element(tag, value) {
+        const node = document.createElement(tag);
+
+        if (value !== undefined) {
+            node.textContent = String(value);
+        }
+
+        return node;
+    }
+
+    function render() {
+        const query = search.value.toLowerCase().trim();
+
+        const filtered = candidates.filter(candidate => {
+            const analysis = candidate.analysis_v5;
+            const investigation = candidate.investigation;
+
+            const title = String(
+                candidate.title || ""
+            ).toLowerCase();
+
+            const matchesText =
+                !query || title.includes(query);
+
+            const matchesPriority =
+                !priority.value ||
+                analysis.priority === priority.value;
+
+            const matchesStatus =
+                !status.value ||
+                investigation.status === status.value;
+
+            return (
+                matchesText &&
+                matchesPriority &&
+                matchesStatus
+            );
+        });
+
+        results.replaceChildren();
+
+        filtered.forEach(candidate => {
+            const analysis = candidate.analysis_v5;
+
+            const item = element("div");
+            item.className = "v5-item";
+
+            const title = element(
+                "div",
+                candidate.title || "Sin título"
+            );
+            title.className = "v5-title";
+
+            const meta = element(
+                "div",
+                "Prioridad: " +
+                analysis.priority +
+                " · Estado: " +
+                candidate.investigation.status +
+                " · Evidencias: " +
+                analysis.evidence_count
+            );
+            meta.className = "v5-meta";
+
+            const tasks = element(
+                "div",
+                "Comprobaciones pendientes: " +
+                analysis.verification_checklist
+                    .map(item => item.label)
+                    .join(" · ")
+            );
+            tasks.className = "v5-meta";
+
+            item.append(title, meta, tasks);
+            results.appendChild(item);
+        });
+
+        if (!filtered.length) {
+            results.appendChild(
+                element(
+                    "div",
+                    "No hay resultados para estos filtros."
+                )
+            );
+        }
+    }
+
+    async function load() {
+        const response = await fetch(
+            "/api/intelligence-v5",
+            {cache: "no-store"}
+        );
+
+        if (!response.ok) {
+            throw new Error("Error HTTP " + response.status);
+        }
+
+        const data = await response.json();
+
+        candidates = data.candidates;
+
+        summary.textContent =
+            data.summary.candidates +
+            " candidatos · " +
+            data.summary.high_priority +
+            " prioridad alta · " +
+            data.summary.medium_priority +
+            " media · " +
+            data.summary.low_priority +
+            " baja · " +
+            data.possible_duplicates.length +
+            " posibles relaciones/duplicados";
+
+        render();
+    }
+
+    search.addEventListener("input", render);
+    priority.addEventListener("change", render);
+    status.addEventListener("change", render);
+
+    document.getElementById(
+        "meridian-v5-refresh"
+    ).addEventListener("click", () => {
+        load().catch(error => {
+            summary.textContent = error.message;
+        });
+    });
+
+    document.getElementById(
+        "meridian-v5-csv"
+    ).addEventListener("click", () => {
+        window.location.href =
+            "/api/intelligence-v5/export.csv";
+    });
+
+    document.getElementById(
+        "meridian-v5-json"
+    ).addEventListener("click", () => {
+        window.location.href =
+            "/api/intelligence-v5/export.json";
+    });
+
+    const investigation = document.getElementById(
+        "meridian-investigation-manager"
+    );
+
+    if (investigation) {
+        investigation.insertAdjacentElement(
+            "afterend",
+            root
+        );
+    }
+
+    load().catch(error => {
+        summary.textContent = error.message;
+    });
+})();
+</script>
+
 </body>
 </html>

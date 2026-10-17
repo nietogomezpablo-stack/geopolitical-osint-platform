@@ -528,6 +528,83 @@ def meridian_investigation_history(key):
         "history": history,
     })
 
+
+
+@app.route("/api/intelligence-v5")
+def meridian_intelligence_v5():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_analysis_v5 import build_report
+
+    return jsonify(build_report())
+
+
+@app.route("/api/intelligence-v5/export.csv")
+def meridian_intelligence_v5_csv():
+    import sys
+    from pathlib import Path
+    from flask import Response
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_analysis_v5 import export_csv_text
+
+    return Response(
+        export_csv_text(),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition":
+                "attachment; filename=meridian_niger_v5.csv"
+        },
+    )
+
+
+@app.route("/api/intelligence-v5/export.json")
+def meridian_intelligence_v5_json():
+    import sys
+    from pathlib import Path
+    from flask import Response
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_analysis_v5 import build_report
+    import json
+
+    return Response(
+        json.dumps(
+            build_report(),
+            ensure_ascii=False,
+            indent=2,
+        ),
+        mimetype="application/json",
+        headers={
+            "Content-Disposition":
+                "attachment; filename=meridian_niger_v5.json"
+        },
+    )
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",
