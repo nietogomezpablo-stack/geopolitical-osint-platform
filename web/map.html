@@ -1,438 +1,605 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian OSINT | Intelligence Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1320'/%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='%2338bdf8' stroke-width='1.6'/%3E%3Cellipse cx='16' cy='16' rx='4.5' ry='11' fill='none' stroke='%2338bdf8' stroke-width='1.2'/%3E%3Cpath d='M5 16h22' stroke='%2338bdf8' stroke-width='1.2'/%3E%3Ccircle cx='22' cy='10.5' r='3' fill='%23fb7185'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{--bg:#080d16;--surface:#0f1827;--raised:#162235;--border:#26344a;--text:#e8eef7;--muted:#92a1b6;--accent:#38bdf8;--ok:#22c55e;--warn:#f59e0b;--bad:#fb7185}
+*{box-sizing:border-box}
+html{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "IBM Plex Sans",system-ui,Arial,sans-serif}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-    <title>Geopolitical OSINT Platform</title>
+.app{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:100vh}
+.sidebar{background:#0b1320;border-right:1px solid var(--border);padding:24px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.logo{display:flex;align-items:center;gap:11px;margin-bottom:34px;color:var(--text);text-decoration:none}
+.logo svg{width:38px;height:38px;flex:none}
+.logo b{display:block;font-size:16px;font-weight:700;letter-spacing:.4px;line-height:1.1}
+.logo small{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+.logo .tgt{animation:pulse 2.4s ease-in-out infinite;transform-origin:22px 10.5px}
+@keyframes pulse{50%{transform:scale(1.35);opacity:.6}}
+.nav-label{font-size:12px;color:var(--muted);margin:0 10px 8px}
+.nav-item{display:block;padding:10px 12px;border-radius:8px;color:#bccadc;text-decoration:none;margin-bottom:4px;border-left:3px solid transparent}
+.nav-item:hover{background:var(--raised);color:#fff}
+.nav-item.active{background:var(--raised);color:#fff;border-left-color:var(--accent)}
+.keys{margin-top:22px;padding:0 10px;font-size:12px;color:var(--muted)}
+kbd{background:var(--raised);border:1px solid var(--border);border-radius:4px;padding:0 5px;font-size:11px}
+.sidebar-foot{margin-top:auto;padding:16px 10px 0;border-top:1px solid var(--border);color:var(--muted);font-size:12px;display:flex;gap:8px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.dot.ok{background:var(--ok)}.dot.bad{background:var(--bad)}.dot.wait{background:var(--warn)}
 
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    >
+main{padding:26px;min-width:0}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+h1{margin:0 0 4px;font-size:24px;font-weight:600;letter-spacing:-.2px}
+.sub{color:var(--muted);font-size:13px}
+.row-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:12px;white-space:nowrap}
+.btn:hover{background:var(--raised)}
+.btn.on{border-color:var(--accent);color:var(--accent)}
+.status{font-size:12px;color:var(--muted);padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface)}
+.banner{display:none;margin-bottom:18px;padding:12px 16px;border:1px solid #5b4a1a;background:#2a2210;border-radius:10px;font-size:13px;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.banner.show{display:flex}
 
-    <style>
-        html,
-        body {
-            margin: 0;
-            height: 100%;
-            font-family: Arial, sans-serif;
-            background: #111827;
-        }
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-bottom:20px}
+.stat{padding:16px 20px;border-right:1px solid var(--border)}
+.stat:last-child{border-right:0}
+.stat-label{font-size:12px;color:var(--muted)}
+.stat-value{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}
+.stat-detail{font-size:12px;color:var(--muted)}
+.bar{height:4px;background:var(--raised);border-radius:2px;margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .4s}
 
-        #map {
-            height: 100%;
-            width: 100%;
-        }
+.workspace{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(320px,1fr);gap:20px;align-items:start}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.card-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.card-title{font-weight:600;font-size:15px}
+.card-sub{font-size:12px;color:var(--muted)}
+.tag{font-size:12px;color:var(--accent);background:#0e2838;padding:4px 9px;border-radius:6px;white-space:nowrap}
 
-        .panel {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            width: 320px;
-            padding: 20px;
-            background: rgba(17, 24, 39, 0.95);
-            color: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-        }
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border)}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.field select,.field input{width:100%;background:var(--raised);border:1px solid var(--border);border-radius:7px;padding:8px 9px;font-size:13px;min-width:0}
+.filter-foot{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.legend{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:3px 9px;border:1px solid var(--border);border-radius:999px;background:transparent;cursor:pointer}
+.chip i{width:9px;height:9px;border-radius:50%}
+.chip[aria-pressed="false"]{opacity:.4}
+#map{height:520px;background:#0d1420}
 
-        .panel h1 {
-            margin: 0 0 5px 0;
-            font-size: 22px;
-        }
+.right{display:grid;gap:20px;position:sticky;top:20px}
+.spark{display:flex;align-items:flex-end;gap:3px;height:54px;padding:10px 18px 0;border-bottom:1px solid var(--border)}
+.spark button{flex:1;min-width:4px;background:#1e5a78;border:0;border-radius:2px 2px 0 0;cursor:pointer;padding:0;transition:background .15s}
+.spark button:hover,.spark button.on{background:var(--accent)}
+.spark-axis{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);padding:3px 18px 8px;border-bottom:1px solid var(--border)}
+.timeline{overflow-y:auto;max-height:300px;padding:6px 10px}
+.ev{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--border);padding:12px 8px;cursor:pointer;border-radius:6px;border-left:3px solid transparent}
+.ev:hover,.ev.sel{background:var(--raised)}
+.ev.sel{border-left-color:var(--accent)}
+.ev-date{font-size:12px;color:var(--accent);display:flex;align-items:center;gap:6px}
+.ev-date i{width:8px;height:8px;border-radius:50%}
+.ev-title{font-weight:500;margin-top:2px}
+.ev-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.details{padding:18px;min-height:170px;max-height:44vh;overflow:auto}
+.d-title{font-size:16px;font-weight:600;margin-bottom:10px}
+.d-row{margin:5px 0;overflow-wrap:anywhere}
+.d-label{color:var(--muted)}
+.d-desc{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);max-width:70ch}
+.sources{margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.sources a{display:block;color:var(--accent);text-decoration:none;margin-top:6px;overflow-wrap:anywhere}
+.sources a:hover{text-decoration:underline}
+.conf{display:flex;align-items:center;gap:8px}
+.conf .bar{flex:1;margin:0;max-width:140px}
+.empty{color:var(--muted);font-size:13px;padding:16px 8px}
+.skel{height:52px;margin:8px;border-radius:8px;background:linear-gradient(90deg,var(--raised),#1d2c44,var(--raised));background-size:200% 100%;animation:sh 1.3s linear infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.foot{color:var(--muted);font-size:12px;margin-top:20px}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#142034;color:#fff}
+.leaflet-popup-content a{color:var(--accent)}
+.leaflet-container{font-family:inherit}
 
-        .subtitle {
-            color: #9ca3af;
-            margin-bottom: 20px;
-        }
+@media (max-width:1150px){.workspace{grid-template-columns:1fr}.right{position:static;grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr 1fr 1fr}.filters .field:first-child{grid-column:1/-1}}
+@media (max-width:850px){
+.app{grid-template-columns:1fr}
+.sidebar{position:static;height:auto;flex-direction:row;align-items:center;padding:12px 16px;gap:16px}
+.logo{margin:0 auto 0 0}.logo small,.nav-label,.sidebar-foot,.keys{display:none}
+.sidebar nav{display:flex;gap:6px}.nav-item{margin:0}
+.stats{grid-template-columns:1fr 1fr}.stat:nth-child(2){border-right:0}.stat:nth-child(-n+2){border-bottom:1px solid var(--border)}
+.right{grid-template-columns:1fr}}
+@media (max-width:550px){main{padding:14px}.filters{grid-template-columns:1fr 1fr}#map{height:380px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-        .navigation {
-            margin-bottom: 20px;
-        }
-
-        .navigation a {
-            color: white;
-            text-decoration: none;
-            background: #374151;
-            padding: 8px 12px;
-            border-radius: 5px;
-            display: inline-block;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .stat {
-            background: #1f2937;
-            padding: 12px;
-            border-radius: 8px;
-        }
-
-        .stat-value {
-            display: block;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .stat-label {
-            display: block;
-            margin-top: 3px;
-            color: #9ca3af;
-            font-size: 12px;
-        }
-
-        .filters {
-            border-top: 1px solid #374151;
-            padding-top: 15px;
-        }
-
-        .filters label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 13px;
-            color: #d1d5db;
-        }
-
-        .filters select {
-            width: 100%;
-            margin-bottom: 12px;
-            padding: 8px;
-            background: #1f2937;
-            color: white;
-            border: 1px solid #374151;
-            border-radius: 5px;
-        }
-
-        .status {
-            margin-top: 10px;
-            color: #9ca3af;
-            font-size: 12px;
-        }
-    </style>
+.language-control{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+.language-control select{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px;cursor:pointer}
+html[dir="rtl"] .sidebar{border-right:0;border-left:1px solid var(--border)}
+html[dir="rtl"] .stat{border-right:0;border-left:1px solid var(--border)}
+html[dir="rtl"] .stat:last-child{border-left:0}
+html[dir="rtl"] .nav-item,html[dir="rtl"] .ev{border-left:0;border-right:3px solid transparent}
+html[dir="rtl"] .nav-item.active,html[dir="rtl"] .ev.sel{border-right-color:var(--accent)}
+html[dir="rtl"] .ev{text-align:right}
+html[dir="rtl"] .leaflet-container{direction:ltr}
+@media(max-width:850px){html[dir="rtl"] .stat:nth-child(2){border-left:0}}
+</style>
 </head>
-
 <body>
+<div class="app">
+  <aside class="sidebar">
+    <a class="logo" href="/" aria-label="Meridian OSINT, inicio">
+      <svg viewBox="0 0 38 38" aria-hidden="true">
+        <rect width="38" height="38" rx="9" fill="#0f1b2e" stroke="#26344a"/>
+        <g fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round">
+          <circle cx="19" cy="19" r="12.5"/>
+          <ellipse cx="19" cy="19" rx="5" ry="12.5" stroke-width="1.1"/>
+          <path d="M6.5 19h25M8.5 12.5h21M8.5 25.5h21" stroke-width="1.1"/>
+        </g>
+        <circle class="tgt" cx="22" cy="10.5" r="3.4" fill="#fb7185"/>
+        <circle cx="22" cy="10.5" r="6" fill="none" stroke="#fb7185" stroke-width="1" opacity=".5"/>
+      </svg>
+      <span><b>MERIDIAN</b><small>Geopolitical OSINT</small></span>
+    </a>
+    <nav aria-label="Principal">
+      <div class="nav-label">Inteligencia</div>
+      <a class="nav-item active" href="/" aria-current="page">Dashboard</a>
+      <a class="nav-item" href="/graph">Knowledge Graph</a>
+    </nav>
+    <div class="keys"><kbd>/</kbd> buscar<br><kbd>Esc</kbd> deseleccionar</div>
+    <div class="sidebar-foot"><span class="dot wait" id="side-dot"></span><span id="side-status">Comprobando API…</span></div>
+  </aside>
 
-<div id="map"></div>
+  <main>
+    <header class="topbar">
+      <div>
+        <h1>Intelligence Overview</h1>
+        <div class="sub">Monitorización y análisis de acontecimientos geopolíticos</div>
+      </div>
+      <div class="row-actions">
+        <label class="language-control"><span data-i18n="Idioma">Idioma</span><select id="meridian-language" aria-label="Idioma"><option value="es">Español</option><option value="en">English</option><option value="fr">Français</option><option value="ar">العربية</option></select></label>
+        <span class="status" id="status" role="status" aria-live="polite">Conectando…</span>
+        <button class="btn" id="auto" aria-pressed="false" title="Actualizar cada 60 s">Auto-actualizar</button>
+        <button class="btn" id="refresh">Actualizar</button>
+        <button class="btn" id="export-csv">CSV</button>
+        <button class="btn" id="export-geo">GeoJSON</button>
+      </div>
+    </header>
 
-<div class="panel">
-    <h1>Geopolitical OSINT Platform</h1>
-
-    <div class="subtitle">
-        Geopolitical OSINT Platform
+    <div class="banner" id="banner">
+      <span id="banner-text"></span>
+      <button class="btn" id="demo">Cargar datos de demostración</button>
     </div>
 
-    <div class="navigation">
-        <a href="/graph">
-            Abrir Knowledge Graph
-        </a>
-    </div>
+    <section class="stats" aria-label="Resumen">
+      <div class="stat"><div class="stat-label">Acontecimientos</div><div class="stat-value" id="s-events">—</div><div class="stat-detail">En la base de datos</div></div>
+      <div class="stat"><div class="stat-label">Geolocalizados</div><div class="stat-value" id="s-geo">—</div><div class="stat-detail" id="s-geo-pct">Con coordenadas</div><div class="bar"><i id="s-geo-bar"></i></div></div>
+      <div class="stat"><div class="stat-label">Entidades</div><div class="stat-value" id="s-ent">—</div><div class="stat-detail">Entidades canónicas</div></div>
+      <div class="stat"><div class="stat-label">Artículos</div><div class="stat-value" id="s-src">—</div><div class="stat-detail">Fuentes recopiladas</div></div>
+    </section>
 
-    <div class="stats">
-        <div class="stat">
-            <span
-                class="stat-value"
-                id="total-events"
-            >
-                -
-            </span>
-
-            <span class="stat-label">
-                Eventos
-            </span>
+    <div class="workspace">
+      <section class="card" aria-label="Mapa">
+        <div class="card-head">
+          <div><div class="card-title">Geospatial Intelligence</div><div class="card-sub">Distribución geográfica por tipo de evento</div></div>
+          <span class="tag" id="map-count">— ubicaciones</span>
         </div>
-
-        <div class="stat">
-            <span
-                class="stat-value"
-                id="geo-events"
-            >
-                -
-            </span>
-
-            <span class="stat-label">
-                Geolocalizados
-            </span>
+        <div class="filters">
+          <div class="field"><label for="f-q">Buscar</label><input id="f-q" type="search" placeholder="Título, lugar o descripción"></div>
+          <div class="field"><label for="f-country">País</label><select id="f-country"><option value="">Todos</option></select></div>
+          <div class="field"><label for="f-type">Tipo</label><select id="f-type"><option value="">Todos</option></select></div>
+          <div class="field"><label for="f-from">Desde</label><input id="f-from" type="date"></div>
+          <div class="field"><label for="f-to">Hasta</label><input id="f-to" type="date"></div>
         </div>
-
-        <div class="stat">
-            <span
-                class="stat-value"
-                id="total-entities"
-            >
-                -
-            </span>
-
-            <span class="stat-label">
-                Entidades
-            </span>
+        <div class="filter-foot">
+          <div class="legend" id="legend" aria-label="Tipos de evento"></div>
+          <div class="row-actions">
+            <select id="f-sort" class="btn" aria-label="Ordenar">
+              <option value="desc">Más recientes primero</option>
+              <option value="asc">Más antiguos primero</option>
+            </select>
+            <button class="btn" id="reset">Limpiar filtros</button>
+          </div>
         </div>
+        <div id="map" role="application" aria-label="Mapa de acontecimientos"></div>
+      </section>
 
-        <div class="stat">
-            <span
-                class="stat-value"
-                id="total-sources"
-            >
-                -
-            </span>
-
-            <span class="stat-label">
-                Artículos
-            </span>
-        </div>
+      <div class="right">
+        <section class="card">
+          <div class="card-head">
+            <div><div class="card-title">Event Timeline</div><div class="card-sub">Actividad por mes · clic para filtrar</div></div>
+            <span class="tag" id="tl-count">0 eventos</span>
+          </div>
+          <div class="spark" id="spark" aria-label="Eventos por mes"></div>
+          <div class="spark-axis"><span id="ax-a"></span><span id="ax-b"></span></div>
+          <div class="timeline" id="timeline"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
+        </section>
+        <section class="card">
+          <div class="card-head"><div><div class="card-title">Intelligence Report</div><div class="card-sub">Detalles y evidencias</div></div></div>
+          <div class="details" id="details" aria-live="polite"><div class="empty">Selecciona un acontecimiento para ver su informe.</div></div>
+        </section>
+      </div>
     </div>
 
-    <div class="filters">
-        <label for="country-filter">
-            País
-        </label>
-
-        <select id="country-filter">
-            <option value="">
-                Todos
-            </option>
-
-            <option value="Niger">
-                Niger
-            </option>
-        </select>
-
-        <label for="type-filter">
-            Tipo de evento
-        </label>
-
-        <select id="type-filter">
-            <option value="">
-                Todos
-            </option>
-
-            <option value="armed_attack">
-                Armed attack
-            </option>
-
-            <option value="claim_responsibility">
-                Claim responsibility
-            </option>
-        </select>
-    </div>
-
-    <div
-        class="status"
-        id="status"
-    >
-        Conectando con API...
-    </div>
+    <div class="foot">Meridian OSINT · Información basada en fuentes abiertas. Los indicadores de confianza son heurísticos, no probabilidades de veracidad.</div>
+  </main>
 </div>
 
-<script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-</script>
-
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/i18next@23.16.8/dist/umd/i18next.min.js"></script>
 <script>
-    const map = L.map("map").setView(
-        [17.5, 8.0],
-        5
-    );
+(() => {
+"use strict";
 
-    L.tileLayer(
-        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        {
-            attribution: "&copy; OpenStreetMap contributors"
-        }
-    ).addTo(map);
-
-    const eventLayer = L.layerGroup().addTo(map);
-
-    function loadStats() {
-        fetch("/api/stats")
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById(
-                    "total-events"
-                ).textContent = data.events;
-
-                document.getElementById(
-                    "geo-events"
-                ).textContent =
-                    data.geolocated_events;
-
-                document.getElementById(
-                    "total-entities"
-                ).textContent =
-                    data.entities;
-
-                document.getElementById(
-                    "total-sources"
-                ).textContent =
-                    data.sources;
-            });
+const TRANSLATIONS = {"es": {"Inteligencia": "Inteligencia", "Dashboard": "Dashboard", "Knowledge Graph": "Knowledge Graph", "Intelligence Overview": "Intelligence Overview", "Monitorización y análisis de acontecimientos geopolíticos": "Monitorización y análisis de acontecimientos geopolíticos", "Auto-actualizar": "Auto-actualizar", "Actualizar": "Actualizar", "Acontecimientos": "Acontecimientos", "Geolocalizados": "Geolocalizados", "Entidades": "Entidades", "Artículos": "Artículos", "En la base de datos": "En la base de datos", "Con coordenadas": "Con coordenadas", "Entidades canónicas": "Entidades canónicas", "Fuentes recopiladas": "Fuentes recopiladas", "Geospatial Intelligence": "Geospatial Intelligence", "Distribución geográfica por tipo de evento": "Distribución geográfica por tipo de evento", "Buscar": "Buscar", "País": "País", "Tipo": "Tipo", "Todos": "Todos", "Desde": "Desde", "Hasta": "Hasta", "Más recientes primero": "Más recientes primero", "Más antiguos primero": "Más antiguos primero", "Limpiar filtros": "Limpiar filtros", "Event Timeline": "Event Timeline", "Actividad por mes · clic para filtrar": "Actividad por mes · clic para filtrar", "Intelligence Report": "Intelligence Report", "Detalles y evidencias": "Detalles y evidencias", "Selecciona un acontecimiento para ver su informe.": "Selecciona un acontecimiento para ver su informe.", "Cargar datos de demostración": "Cargar datos de demostración", "Título, lugar o descripción": "Título, lugar o descripción", "Meridian OSINT · Información basada en fuentes abiertas. Los indicadores de confianza son heurísticos, no probabilidades de veracidad.": "Meridian OSINT · Información basada en fuentes abiertas. Los indicadores de confianza son heurísticos, no probabilidades de veracidad.", "Fecha": "Fecha", "Localización": "Localización", "Confianza heurística": "Confianza heurística", "Entidades vinculadas": "Entidades vinculadas", "Fuentes vinculadas": "Fuentes vinculadas", "No disponible": "No disponible", "Fecha desconocida": "Fecha desconocida", "Ver informe": "Ver informe", "Ningún acontecimiento coincide. Prueba a limpiar los filtros.": "Ningún acontecimiento coincide. Prueba a limpiar los filtros.", "Reintentar": "Reintentar", "API conectada": "API conectada", "Modo demo": "Modo demo", "Cargando…": "Cargando…", "Conectando…": "Conectando…", "Comprobando API…": "Comprobando API…", "Error de conexión con API": "Error de conexión con API", "No se pudieron cargar los acontecimientos.": "No se pudieron cargar los acontecimientos.", "No se pudo cargar el informe. ": "No se pudo cargar el informe. ", "No se pudo conectar con ": "No se pudo conectar con ", ". Comprueba que el servidor está activo.": ". Comprueba que el servidor está activo.", " eventos visibles": " eventos visibles", " eventos": " eventos", " ubicaciones": " ubicaciones", "% del total": "% del total", "Fuente sin título": "Fuente sin título", "Evento de demostración en ": "Evento de demostración en ", "Datos ficticios para probar la interfaz sin API.": "Datos ficticios para probar la interfaz sin API.", "Entidad A": "Entidad A", "Fuente de ejemplo": "Fuente de ejemplo", "buscar": "buscar", "deseleccionar": "deseleccionar", "Principal": "Principal", "Resumen": "Resumen", "Mapa": "Mapa", "Tipos de evento": "Tipos de evento", "Ordenar": "Ordenar", "Mapa de acontecimientos": "Mapa de acontecimientos", "Eventos por mes": "Eventos por mes", "Actualizar cada 60 s": "Actualizar cada 60 s", "Meridian OSINT, inicio": "Meridian OSINT, inicio", "Idioma": "Idioma"}, "en": {"Inteligencia": "Intelligence", "Dashboard": "Dashboard", "Knowledge Graph": "Knowledge Graph", "Intelligence Overview": "Intelligence Overview", "Monitorización y análisis de acontecimientos geopolíticos": "Monitoring and analysis of geopolitical events", "Auto-actualizar": "Auto-refresh", "Actualizar": "Refresh", "Acontecimientos": "Events", "Geolocalizados": "Geolocated", "Entidades": "Entities", "Artículos": "Articles", "En la base de datos": "In the database", "Con coordenadas": "With coordinates", "Entidades canónicas": "Canonical entities", "Fuentes recopiladas": "Collected sources", "Geospatial Intelligence": "Geospatial Intelligence", "Distribución geográfica por tipo de evento": "Geographic distribution by event type", "Buscar": "Search", "País": "Country", "Tipo": "Type", "Todos": "All", "Desde": "From", "Hasta": "To", "Más recientes primero": "Newest first", "Más antiguos primero": "Oldest first", "Limpiar filtros": "Clear filters", "Event Timeline": "Event Timeline", "Actividad por mes · clic para filtrar": "Monthly activity · click to filter", "Intelligence Report": "Intelligence Report", "Detalles y evidencias": "Details and evidence", "Selecciona un acontecimiento para ver su informe.": "Select an event to view its report.", "Cargar datos de demostración": "Load demo data", "Título, lugar o descripción": "Title, location or description", "Meridian OSINT · Información basada en fuentes abiertas. Los indicadores de confianza son heurísticos, no probabilidades de veracidad.": "Meridian OSINT · Open-source information. Confidence indicators are heuristic, not probabilities of truth.", "Fecha": "Date", "Localización": "Location", "Confianza heurística": "Heuristic confidence", "Entidades vinculadas": "Linked entities", "Fuentes vinculadas": "Linked sources", "No disponible": "Not available", "Fecha desconocida": "Unknown date", "Ver informe": "View report", "Ningún acontecimiento coincide. Prueba a limpiar los filtros.": "No matching events. Try clearing the filters.", "Reintentar": "Retry", "API conectada": "API connected", "Modo demo": "Demo mode", "Cargando…": "Loading…", "Conectando…": "Connecting…", "Comprobando API…": "Checking API…", "Error de conexión con API": "API connection error", "No se pudieron cargar los acontecimientos.": "Could not load events.", "No se pudo cargar el informe. ": "Could not load report. ", "No se pudo conectar con ": "Could not connect to ", ". Comprueba que el servidor está activo.": ". Check that the server is running.", " eventos visibles": " visible events", " eventos": " events", " ubicaciones": " locations", "% del total": "% of total", "Fuente sin título": "Untitled source", "Evento de demostración en ": "Demo event in ", "Datos ficticios para probar la interfaz sin API.": "Fictional data to test the interface without the API.", "Entidad A": "Entity A", "Fuente de ejemplo": "Sample source", "buscar": "search", "deseleccionar": "deselect", "Principal": "Main navigation", "Resumen": "Overview", "Mapa": "Map", "Tipos de evento": "Event types", "Ordenar": "Sort", "Mapa de acontecimientos": "Event map", "Eventos por mes": "Events by month", "Actualizar cada 60 s": "Refresh every 60 s", "Meridian OSINT, inicio": "Meridian OSINT, home", "Idioma": "Language"}, "fr": {"Inteligencia": "Renseignement", "Dashboard": "Tableau de bord", "Knowledge Graph": "Graphe de connaissances", "Intelligence Overview": "Vue d’ensemble du renseignement", "Monitorización y análisis de acontecimientos geopolíticos": "Suivi et analyse des événements géopolitiques", "Auto-actualizar": "Actualisation auto", "Actualizar": "Actualiser", "Acontecimientos": "Événements", "Geolocalizados": "Géolocalisés", "Entidades": "Entités", "Artículos": "Articles", "En la base de datos": "Dans la base de données", "Con coordenadas": "Avec coordonnées", "Entidades canónicas": "Entités canoniques", "Fuentes recopiladas": "Sources collectées", "Geospatial Intelligence": "Renseignement géospatial", "Distribución geográfica por tipo de evento": "Répartition géographique par type d’événement", "Buscar": "Rechercher", "País": "Pays", "Tipo": "Type", "Todos": "Tous", "Desde": "Du", "Hasta": "Au", "Más recientes primero": "Plus récents d’abord", "Más antiguos primero": "Plus anciens d’abord", "Limpiar filtros": "Effacer les filtres", "Event Timeline": "Chronologie des événements", "Actividad por mes · clic para filtrar": "Activité mensuelle · cliquer pour filtrer", "Intelligence Report": "Rapport de renseignement", "Detalles y evidencias": "Détails et preuves", "Selecciona un acontecimiento para ver su informe.": "Sélectionnez un événement pour afficher son rapport.", "Cargar datos de demostración": "Charger les données de démonstration", "Título, lugar o descripción": "Titre, lieu ou description", "Meridian OSINT · Información basada en fuentes abiertas. Los indicadores de confianza son heurísticos, no probabilidades de veracidad.": "Meridian OSINT · Informations de sources ouvertes. Les indicateurs de confiance sont heuristiques, pas des probabilités de véracité.", "Fecha": "Date", "Localización": "Lieu", "Confianza heurística": "Confiance heuristique", "Entidades vinculadas": "Entités associées", "Fuentes vinculadas": "Sources associées", "No disponible": "Non disponible", "Fecha desconocida": "Date inconnue", "Ver informe": "Voir le rapport", "Ningún acontecimiento coincide. Prueba a limpiar los filtros.": "Aucun événement correspondant. Essayez d’effacer les filtres.", "Reintentar": "Réessayer", "API conectada": "API connectée", "Modo demo": "Mode démo", "Cargando…": "Chargement…", "Conectando…": "Connexion…", "Comprobando API…": "Vérification de l’API…", "Error de conexión con API": "Erreur de connexion à l’API", "No se pudieron cargar los acontecimientos.": "Impossible de charger les événements.", "No se pudo cargar el informe. ": "Impossible de charger le rapport. ", "No se pudo conectar con ": "Connexion impossible à ", ". Comprueba que el servidor está activo.": ". Vérifiez que le serveur fonctionne.", " eventos visibles": " événements visibles", " eventos": " événements", " ubicaciones": " lieux", "% del total": "% du total", "Fuente sin título": "Source sans titre", "Evento de demostración en ": "Événement de démonstration à ", "Datos ficticios para probar la interfaz sin API.": "Données fictives pour tester l’interface sans API.", "Entidad A": "Entité A", "Fuente de ejemplo": "Source d’exemple", "buscar": "rechercher", "deseleccionar": "désélectionner", "Principal": "Navigation principale", "Resumen": "Résumé", "Mapa": "Carte", "Tipos de evento": "Types d’événement", "Ordenar": "Trier", "Mapa de acontecimientos": "Carte des événements", "Eventos por mes": "Événements par mois", "Actualizar cada 60 s": "Actualiser toutes les 60 s", "Meridian OSINT, inicio": "Meridian OSINT, accueil", "Idioma": "Langue"}, "ar": {"Inteligencia": "الاستخبارات", "Dashboard": "لوحة التحكم", "Knowledge Graph": "الرسم البياني المعرفي", "Intelligence Overview": "نظرة عامة على الاستخبارات", "Monitorización y análisis de acontecimientos geopolíticos": "رصد الأحداث الجيوسياسية وتحليلها", "Auto-actualizar": "تحديث تلقائي", "Actualizar": "تحديث", "Acontecimientos": "الأحداث", "Geolocalizados": "محددة الموقع", "Entidades": "الكيانات", "Artículos": "المقالات", "En la base de datos": "في قاعدة البيانات", "Con coordenadas": "ذات إحداثيات", "Entidades canónicas": "الكيانات الموحّدة", "Fuentes recopiladas": "المصادر المجمّعة", "Geospatial Intelligence": "الاستخبارات الجغرافية المكانية", "Distribución geográfica por tipo de evento": "التوزيع الجغرافي حسب نوع الحدث", "Buscar": "بحث", "País": "الدولة", "Tipo": "النوع", "Todos": "الكل", "Desde": "من", "Hasta": "إلى", "Más recientes primero": "الأحدث أولاً", "Más antiguos primero": "الأقدم أولاً", "Limpiar filtros": "مسح المرشحات", "Event Timeline": "الجدول الزمني للأحداث", "Actividad por mes · clic para filtrar": "النشاط الشهري · انقر للتصفية", "Intelligence Report": "تقرير استخباراتي", "Detalles y evidencias": "التفاصيل والأدلة", "Selecciona un acontecimiento para ver su informe.": "اختر حدثاً لعرض تقريره.", "Cargar datos de demostración": "تحميل بيانات تجريبية", "Título, lugar o descripción": "العنوان أو الموقع أو الوصف", "Meridian OSINT · Información basada en fuentes abiertas. Los indicadores de confianza son heurísticos, no probabilidades de veracidad.": "Meridian OSINT · معلومات من مصادر مفتوحة. مؤشرات الثقة تقديرية وليست احتمالات لصحة المعلومات.", "Fecha": "التاريخ", "Localización": "الموقع", "Confianza heurística": "الثقة التقديرية", "Entidades vinculadas": "الكيانات المرتبطة", "Fuentes vinculadas": "المصادر المرتبطة", "No disponible": "غير متاح", "Fecha desconocida": "تاريخ غير معروف", "Ver informe": "عرض التقرير", "Ningún acontecimiento coincide. Prueba a limpiar los filtros.": "لا توجد أحداث مطابقة. جرّب مسح المرشحات.", "Reintentar": "إعادة المحاولة", "API conectada": "واجهة API متصلة", "Modo demo": "الوضع التجريبي", "Cargando…": "جارٍ التحميل…", "Conectando…": "جارٍ الاتصال…", "Comprobando API…": "جارٍ التحقق من API…", "Error de conexión con API": "خطأ في الاتصال بواجهة API", "No se pudieron cargar los acontecimientos.": "تعذّر تحميل الأحداث.", "No se pudo cargar el informe. ": "تعذّر تحميل التقرير. ", "No se pudo conectar con ": "تعذّر الاتصال بـ ", ". Comprueba que el servidor está activo.": ". تأكد من تشغيل الخادم.", " eventos visibles": " أحداث ظاهرة", " eventos": " أحداث", " ubicaciones": " مواقع", "% del total": "% من الإجمالي", "Fuente sin título": "مصدر بلا عنوان", "Evento de demostración en ": "حدث تجريبي في ", "Datos ficticios para probar la interfaz sin API.": "بيانات افتراضية لاختبار الواجهة دون API.", "Entidad A": "الكيان أ", "Fuente de ejemplo": "مصدر تجريبي", "buscar": "بحث", "deseleccionar": "إلغاء التحديد", "Principal": "التنقل الرئيسي", "Resumen": "ملخص", "Mapa": "الخريطة", "Tipos de evento": "أنواع الأحداث", "Ordenar": "ترتيب", "Mapa de acontecimientos": "خريطة الأحداث", "Eventos por mes": "الأحداث حسب الشهر", "Actualizar cada 60 s": "تحديث كل 60 ثانية", "Meridian OSINT, inicio": "Meridian OSINT، الرئيسية", "Idioma": "اللغة"}};
+const LANG_KEY = "meridian-language";
+let currentLanguage = localStorage.getItem(LANG_KEY) || "es";
+if (!Object.hasOwn(TRANSLATIONS, currentLanguage)) currentLanguage = "es";
+const originalNodes = new WeakMap();
+const originalAttributes = new WeakMap();
+const t = key => (window.i18next && i18next.isInitialized ? i18next.t(key) : (TRANSLATIONS[currentLanguage][key] ?? key));
+function translateTree() {
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  for (const node of nodes) {
+    if (!node.parentElement || ["SCRIPT", "STYLE"].includes(node.parentElement.tagName)) continue;
+    if (!originalNodes.has(node)) originalNodes.set(node, node.nodeValue);
+    const source = originalNodes.get(node);
+    const key = source.trim();
+    if (Object.hasOwn(TRANSLATIONS.es, key)) {
+      const lead = source.match(/^\s*/)[0], tail = source.match(/\s*$/)[0];
+      node.nodeValue = lead + t(key) + tail;
     }
-
-    function loadEvents() {
-        const country =
-            document.getElementById(
-                "country-filter"
-            ).value;
-
-        const eventType =
-            document.getElementById(
-                "type-filter"
-            ).value;
-
-        const parameters =
-            new URLSearchParams();
-
-        if (country) {
-            parameters.append(
-                "country",
-                country
-            );
-        }
-
-        if (eventType) {
-            parameters.append(
-                "type",
-                eventType
-            );
-        }
-
-        let url = "/api/events";
-
-        if (parameters.toString()) {
-            url += "?" + parameters.toString();
-        }
-
-        document.getElementById(
-            "status"
-        ).textContent = "Cargando eventos...";
-
-        fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("API error");
-                }
-
-                return response.json();
-            })
-            .then(data => {
-                eventLayer.clearLayers();
-
-                const markers = [];
-
-                const geolocatedEvents =
-                    data.events.filter(
-                        event =>
-                            event.latitude !== null &&
-                            event.longitude !== null
-                    );
-
-                geolocatedEvents.forEach(event => {
-                    const marker =
-                        L.circleMarker(
-                            [
-                                event.latitude,
-                                event.longitude
-                            ],
-                            {
-                                radius: 8,
-                                weight: 2,
-                                fillOpacity: 0.8
-                            }
-                        );
-
-                    marker.bindPopup(`
-                        <strong>${event.title}</strong>
-
-                        <br><br>
-
-                        <strong>Fecha:</strong>
-                        ${event.event_date}
-
-                        <br>
-
-                        <strong>Tipo:</strong>
-                        ${event.event_type}
-
-                        <br>
-
-                        <strong>País:</strong>
-                        ${event.country}
-
-                        <br>
-
-                        <strong>Lugar:</strong>
-                        ${event.location}
-
-                        <br>
-
-                        <strong>Confianza:</strong>
-                        ${event.confidence}
-
-                        <br><br>
-
-                        <a
-                            href="/api/events/${event.id}"
-                            target="_blank"
-                        >
-                            Ver datos completos
-                        </a>
-                    `);
-
-                    marker.addTo(eventLayer);
-
-                    markers.push(marker);
-                });
-
-                document.getElementById(
-                    "status"
-                ).textContent =
-                    `API conectada · ${data.count} eventos encontrados`;
-
-                if (markers.length > 0) {
-                    const group =
-                        L.featureGroup(markers);
-
-                    map.fitBounds(
-                        group.getBounds().pad(0.3)
-                    );
-                }
-            })
-            .catch(error => {
-                document.getElementById(
-                    "status"
-                ).textContent =
-                    "Error de conexión con API";
-
-                console.error(error);
-            });
+  }
+  for (const el of document.querySelectorAll("[placeholder],[aria-label],[title]")) {
+    if (!originalAttributes.has(el)) {
+      originalAttributes.set(el, Object.fromEntries(["placeholder", "aria-label", "title"].map(a => [a, el.getAttribute(a)])));
     }
+    for (const [attr, source] of Object.entries(originalAttributes.get(el))) {
+      if (source && Object.hasOwn(TRANSLATIONS.es, source)) el.setAttribute(attr, t(source));
+    }
+  }
+  document.documentElement.lang = currentLanguage;
+  document.documentElement.dir = currentLanguage === "ar" ? "rtl" : "ltr";
+}
+function updateLanguage(lang) {
+  currentLanguage = lang;
+  localStorage.setItem(LANG_KEY, lang);
+  if (window.i18next && i18next.isInitialized) i18next.changeLanguage(lang);
+  translateTree();
+  if (S.events.length) {
+    fillSelect("f-country", S.events.map(e => e.country));
+    fillSelect("f-type", S.events.map(e => e.event_type));
+    renderLegend();
+    apply(false);
+    if (S.selected != null && cache.has(S.selected)) renderDetails(cache.get(S.selected));
+  }
+  translateTree();
+  const status = document.getElementById("status");
+  if (status && S.events.length) setStatus((S.demo ? t("Modo demo") : t("API conectada")) + " · " + visible().length + t(" eventos visibles"), S.demo ? "wait" : "ok");
+}
+if (window.i18next) i18next.init({ lng: currentLanguage, fallbackLng: "es", resources: Object.fromEntries(Object.entries(TRANSLATIONS).map(([k, v]) => [k, { translation: v }])), interpolation: { escapeValue: false } });
+document.getElementById("meridian-language").value = currentLanguage;
+document.getElementById("meridian-language").addEventListener("change", e => updateLanguage(e.target.value));
+translateTree();
 
-    document.getElementById(
-        "country-filter"
-    ).addEventListener(
-        "change",
-        loadEvents
-    );
 
-    document.getElementById(
-        "type-filter"
-    ).addEventListener(
-        "change",
-        loadEvents
-    );
+const API = { stats: "/api/stats", events: "/api/events", event: id => "/api/events/" + encodeURIComponent(id) };
+const REFRESH_MS = 60000, TIMEOUT_MS = 10000, VIEW = [17.5, 8], ZOOM = 5;
+const PALETTE = ["#38bdf8","#fb7185","#f59e0b","#a78bfa","#34d399","#f472b6","#facc15","#60a5fa","#fb923c","#2dd4bf"];
+const S = { events: [], selected: null, hidden: new Set(), demo: false, timer: null, req: 0 };
+const markers = new Map(), cache = new Map(), colors = new Map();
+const $ = id => document.getElementById(id);
 
-    loadStats();
-    loadEvents();
+function h(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+const val = v => (v == null || v === "") ? t("No disponible") : String(v);
+const pretty = v => val(v).replaceAll("_", " ");
+const hasXY = e => e.latitude != null && e.longitude != null && Number.isFinite(+e.latitude) && Number.isFinite(+e.longitude);
+const colorOf = t => { if (!colors.has(t)) colors.set(t, PALETTE[colors.size % PALETTE.length]); return colors.get(t); };
+function fmtDate(v) {
+  if (!v) return t("Fecha desconocida");
+  const d = new Date(v + "T00:00:00");
+  return isNaN(d) ? v : d.toLocaleDateString(currentLanguage === "ar" ? "ar" : currentLanguage, { day: "2-digit", month: "short", year: "numeric" });
+}
+const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+async function getJSON(url) {
+  const c = new AbortController(), t = setTimeout(() => c.abort(), TIMEOUT_MS);
+  try {
+    const r = await fetch(url, { signal: c.signal, headers: { Accept: "application/json" } });
+    if (!r.ok) throw new Error(r.status + " " + r.statusText);
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+function setStatus(text, kind) {
+  $("status").textContent = text;
+  $("side-status").textContent = text.split(" · ")[0];
+  $("side-dot").className = "dot " + (kind || "wait");
+}
+
+/* Mapa */
+const map = L.map("map", { zoomControl: false }).setView(VIEW, ZOOM);
+L.control.zoom({ position: "bottomright" }).addTo(map);
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  maxZoom: 19
+}).addTo(map);
+const layer = L.layerGroup().addTo(map);
+const style = (e, sel) => {
+  const c = colorOf(e.event_type);
+  return { radius: sel ? 12 : 8, color: sel ? "#fff" : c, fillColor: c, weight: sel ? 3 : 1.5, fillOpacity: .85 };
+};
+function renderMap(events, fit) {
+  layer.clearLayers(); markers.clear();
+  const list = [];
+  events.filter(hasXY).forEach(e => {
+    const m = L.circleMarker([+e.latitude, +e.longitude], style(e, e.id === S.selected));
+    const pop = h("div"), a = h("a", "", t("Ver informe"));
+    a.href = "#";
+    a.addEventListener("click", ev => { ev.preventDefault(); select(e.id, false); m.closePopup(); });
+    pop.append(h("strong", "", e.title), h("div", "", fmtDate(e.event_date)), h("div", "", val(e.location)), a);
+    m.bindPopup(pop);
+    m.on("click", () => select(e.id, false));
+    m.addTo(layer); markers.set(e.id, m); list.push(m);
+  });
+  $("map-count").textContent = list.length + t(" ubicaciones");
+  if (fit) list.length ? map.fitBounds(L.featureGroup(list).getBounds().pad(.25), { maxZoom: 8 }) : map.setView(VIEW, ZOOM);
+}
+
+/* Filtros */
+const FIELDS = { q: "f-q", country: "f-country", type: "f-type", from: "f-from", to: "f-to", sort: "f-sort" };
+function visible(ignoreDates) {
+  const q = $("f-q").value.trim().toLowerCase(), country = $("f-country").value, type = $("f-type").value;
+  const from = ignoreDates ? "" : $("f-from").value, to = ignoreDates ? "" : $("f-to").value;
+  const dir = $("f-sort").value === "asc" ? 1 : -1;
+  return S.events.filter(e =>
+    (!country || e.country === country) && (!type || e.event_type === type) && !S.hidden.has(e.event_type) &&
+    (!from || (e.event_date && e.event_date >= from)) && (!to || (e.event_date && e.event_date <= to)) &&
+    (!q || [e.title, e.location, e.country, e.description].some(v => v && String(v).toLowerCase().includes(q)))
+  ).sort((a, b) => dir * String(a.event_date || "").localeCompare(String(b.event_date || "")));
+}
+function fillSelect(id, values) {
+  const sel = $(id), prev = sel.value;
+  while (sel.options.length > 1) sel.remove(1);
+  [...new Set(values.filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), currentLanguage)).forEach(v => {
+    const o = h("option", "", pretty(v)); o.value = v; sel.appendChild(o);
+  });
+  if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+}
+function renderLegend() {
+  const box = $("legend"); box.replaceChildren();
+  [...new Set(S.events.map(e => e.event_type).filter(Boolean))].sort().forEach(t => {
+    const b = h("button", "chip"), d = h("i");
+    b.type = "button"; d.style.background = colorOf(t);
+    b.append(d, document.createTextNode(pretty(t)));
+    b.setAttribute("aria-pressed", String(!S.hidden.has(t)));
+    b.addEventListener("click", () => { S.hidden.has(t) ? S.hidden.delete(t) : S.hidden.add(t); renderLegend(); apply(true); });
+    box.appendChild(b);
+  });
+}
+function saveHash() {
+  const p = new URLSearchParams();
+  Object.entries(FIELDS).forEach(([k, id]) => { const v = $(id).value; if (v && !(k === "sort" && v === "desc")) p.set(k, v); });
+  if (S.selected != null) p.set("event", S.selected);
+  history.replaceState(null, "", p.toString() ? "#" + p : location.pathname + location.search);
+}
+function loadHash() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  Object.entries(FIELDS).forEach(([k, id]) => { if (p.has(k)) $(id).value = p.get(k); });
+  return p.get("event");
+}
+
+/* Actividad por mes */
+function renderSpark() {
+  const box = $("spark"); box.replaceChildren();
+  const counts = {};
+  visible(true).forEach(e => { if (e.event_date) { const k = e.event_date.slice(0, 7); counts[k] = (counts[k] || 0) + 1; } });
+  const keys = Object.keys(counts).sort();
+  $("ax-a").textContent = keys[0] || ""; $("ax-b").textContent = keys.length > 1 ? keys[keys.length - 1] : "";
+  if (!keys.length) return;
+  const max = Math.max(...keys.map(k => counts[k])), from = $("f-from").value, to = $("f-to").value;
+  keys.forEach(k => {
+    const [y, m] = k.split("-").map(Number), last = new Date(y, m, 0).getDate();
+    const b = h("button"); b.type = "button";
+    b.style.height = Math.max(8, counts[k] / max * 100) + "%";
+    b.title = k + ": " + counts[k] + t(" eventos");
+    b.setAttribute("aria-label", b.title);
+    if (from === k + "-01" && to === k + "-" + last) b.classList.add("on");
+    b.addEventListener("click", () => {
+      const on = b.classList.contains("on");
+      $("f-from").value = on ? "" : k + "-01";
+      $("f-to").value = on ? "" : k + "-" + String(last).padStart(2, "0");
+      apply(true);
+    });
+    box.appendChild(b);
+  });
+}
+
+/* Cronología */
+function renderTimeline(events) {
+  const box = $("timeline"); box.replaceChildren();
+  $("tl-count").textContent = events.length + t(" eventos");
+  if (!events.length) { box.appendChild(h("div", "empty", t("Ningún acontecimiento coincide. Prueba a limpiar los filtros."))); return; }
+  const frag = document.createDocumentFragment();
+  events.forEach(e => {
+    const b = h("button", "ev" + (e.id === S.selected ? " sel" : "")), d = h("div", "ev-date"), dot = h("i");
+    b.type = "button"; dot.style.background = colorOf(e.event_type);
+    if (e.id === S.selected) b.setAttribute("aria-current", "true");
+    d.append(dot, document.createTextNode(fmtDate(e.event_date)));
+    b.append(d, h("div", "ev-title", e.title), h("div", "ev-meta", [val(e.country), val(e.location), pretty(e.event_type)].join(" · ")));
+    b.addEventListener("click", () => select(e.id, true));
+    frag.appendChild(b);
+  });
+  box.appendChild(frag);
+  const sel = box.querySelector(".sel"); if (sel) sel.scrollIntoView({ block: "nearest" });
+}
+$("timeline").addEventListener("keydown", ev => {
+  if (ev.key !== "ArrowDown" && ev.key !== "ArrowUp") return;
+  const items = [...$("timeline").querySelectorAll(".ev")], i = items.indexOf(document.activeElement);
+  if (i < 0) return;
+  ev.preventDefault();
+  const n = items[i + (ev.key === "ArrowDown" ? 1 : -1)]; if (n) n.focus();
+});
+
+/* Informe */
+function row(parent, label, value) {
+  const r = h("div", "d-row");
+  r.append(h("span", "d-label", label + ": "), document.createTextNode(val(value)));
+  parent.appendChild(r);
+}
+function renderDetails(e) {
+  const box = $("details"); box.replaceChildren();
+  box.appendChild(h("div", "d-title", e.title));
+  row(box, t("Fecha"), fmtDate(e.event_date)); row(box, t("Tipo"), pretty(e.event_type));
+  row(box, t("País"), e.country); row(box, t("Localización"), e.location);
+  const c = h("div", "d-row conf"), n = Number(e.confidence);
+  c.appendChild(h("span", "d-label", t("Confianza heurística") + ": "));
+  if (e.confidence != null && e.confidence !== "" && Number.isFinite(n)) {
+    const pct = Math.max(0, Math.min(100, n <= 1 ? n * 100 : n)), bar = h("div", "bar"), f = h("i");
+    f.style.width = pct + "%"; bar.appendChild(f); c.append(bar, h("span", "", Math.round(pct) + "%"));
+  } else c.appendChild(document.createTextNode(val(e.confidence)));
+  box.appendChild(c);
+  box.appendChild(h("div", "d-desc", val(e.description)));
+  if (e.entities && e.entities.length) row(box, t("Entidades vinculadas"), e.entities.map(x => x.canonical_name).join(", "));
+  const src = h("div", "sources");
+  src.appendChild(h("div", "d-label", t("Fuentes vinculadas") + ": " + (e.sources || []).length));
+  (e.sources || []).forEach(s => {
+    const text = s.title || s.domain || s.url || t("Fuente sin título");
+    if (s.url && /^https?:\/\//i.test(s.url)) {
+      const a = h("a", "", text); a.href = s.url; a.target = "_blank"; a.rel = "noopener noreferrer"; src.appendChild(a);
+    } else src.appendChild(h("div", "d-row", text));
+  });
+  box.appendChild(src);
+  translateTree();
+}
+async function select(id, focusMap) {
+  const prev = S.selected, rid = ++S.req;
+  S.selected = id; saveHash();
+  const pe = S.events.find(e => e.id === prev), ce = S.events.find(e => e.id === id);
+  if (markers.get(prev) && pe) markers.get(prev).setStyle(style(pe, false));
+  if (markers.get(id) && ce) { markers.get(id).setStyle(style(ce, true)); markers.get(id).bringToFront(); }
+  renderTimeline(visible());
+  if (focusMap && markers.get(id)) { map.flyTo(markers.get(id).getLatLng(), Math.max(map.getZoom(), 7), { duration: .6 }); markers.get(id).openPopup(); }
+  if (cache.has(id)) return renderDetails(cache.get(id));
+  $("details").replaceChildren(h("div", "skel"), h("div", "skel"));
+  try {
+    const data = S.demo ? ce : await getJSON(API.event(id));
+    cache.set(id, data);
+    if (rid === S.req) renderDetails(data);
+  } catch (err) {
+    console.error(err);
+    if (rid !== S.req) return;
+    const box = h("div", "empty", t("No se pudo cargar el informe. ")), r = h("button", "btn", t("Reintentar"));
+    r.type = "button"; r.addEventListener("click", () => select(id, false));
+    box.appendChild(r); $("details").replaceChildren(box);
+  }
+}
+
+/* Aplicar y cargar */
+function apply(fit = true) {
+  const events = visible();
+  if (S.selected != null && !events.some(e => e.id === S.selected)) {
+    S.selected = null; S.req++;
+    $("details").replaceChildren(h("div", "empty", t("Selecciona un acontecimiento para ver su informe.")));
+  }
+  renderMap(events, fit); renderTimeline(events); renderSpark(); saveHash();
+  translateTree();
+  setStatus((S.demo ? t("Modo demo") : t("API conectada")) + " · " + events.length + t(" eventos visibles"), S.demo ? "wait" : "ok");
+}
+function setStats(d) {
+  $("s-events").textContent = d.events ?? "—"; $("s-geo").textContent = d.geolocated_events ?? "—";
+  $("s-ent").textContent = d.entities ?? "—"; $("s-src").textContent = d.sources ?? "—";
+  const pct = d.events ? Math.round(d.geolocated_events / d.events * 100) : 0;
+  $("s-geo-pct").textContent = d.events ? pct + t("% del total") : "Con coordenadas";
+  $("s-geo-bar").style.width = pct + "%";
+}
+function ingest(initial) {
+  fillSelect("f-country", S.events.map(e => e.country));
+  fillSelect("f-type", S.events.map(e => e.event_type));
+  renderLegend();
+  if (initial) {
+    const w = loadHash(), m = w != null && S.events.find(e => String(e.id) === w);
+    if (m) S.selected = m.id;
+  }
+  apply(true);
+  if (S.selected != null) select(S.selected, true);
+  translateTree();
+}
+async function load(initial) {
+  setStatus(t("Cargando…"), "wait"); $("banner").classList.remove("show");
+  const [stats, events] = await Promise.allSettled([getJSON(API.stats), getJSON(API.events)]);
+  if (events.status === "rejected") {
+    console.error(events.reason);
+    setStatus(t("Error de conexión con API"), "bad");
+    $("timeline").replaceChildren(h("div", "empty", t("No se pudieron cargar los acontecimientos.")));
+    $("banner-text").textContent = t("No se pudo conectar con ") + API.events + t(". Comprueba que el servidor está activo.");
+    $("banner").classList.add("show");
+    return;
+  }
+  S.demo = false; S.events = events.value.events || [];
+  if (stats.status === "fulfilled") setStats(stats.value);
+  ingest(initial);
+}
+function loadDemo() {
+  const types = ["conflicto_armado", "protesta", "diplomacia", "ciberataque"];
+  const base = [["Bamako","Mali",12.64,-8.0],["Niamey","Níger",13.51,2.11],["Trípoli","Libia",32.89,13.19],["Jartum","Sudán",15.5,32.56],["Uagadugú","Burkina Faso",12.37,-1.52],["Argel","Argelia",36.75,3.06]];
+  S.demo = true;
+  S.events = base.map((b, i) => ({
+    id: "demo-" + i, title: t("Evento de demostración en ") + b[0], event_date: "2026-0" + (1 + Math.floor(i / 2)) + "-1" + i,
+    event_type: types[i % 4], country: b[1], location: b[0], latitude: b[2], longitude: b[3], confidence: .5 + i * .08,
+    description: t("Datos ficticios para probar la interfaz sin API."), entities: [{ canonical_name: t("Entidad A") }],
+    sources: [{ title: t("Fuente de ejemplo"), url: "https://example.com" }]
+  }));
+  setStats({ events: 6, geolocated_events: 6, entities: 12, sources: 34 });
+  $("banner").classList.remove("show"); ingest(false);
+}
+
+/* Exportar */
+function download(name, mime, content) {
+  const a = h("a"); a.href = URL.createObjectURL(new Blob([content], { type: mime })); a.download = name;
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+$("export-csv").addEventListener("click", () => {
+  const cols = ["id","event_date","title","event_type","country","location","latitude","longitude","confidence"];
+  const esc = v => '"' + String(v ?? "").replaceAll('"', '""') + '"';
+  download("eventos.csv", "text/csv;charset=utf-8", "\ufeff" + [cols.join(",")].concat(visible().map(e => cols.map(c => esc(e[c])).join(","))).join("\n"));
+});
+$("export-geo").addEventListener("click", () => {
+  const features = visible().filter(hasXY).map(e => ({ type: "Feature", geometry: { type: "Point", coordinates: [+e.longitude, +e.latitude] },
+    properties: { id: e.id, title: e.title, date: e.event_date, type: e.event_type, country: e.country, location: e.location } }));
+  download("eventos.geojson", "application/geo+json", JSON.stringify({ type: "FeatureCollection", features }, null, 2));
+});
+
+/* Controles */
+["f-country","f-type","f-from","f-to","f-sort"].forEach(id => $(id).addEventListener("change", () => apply(true)));
+$("f-q").addEventListener("input", debounce(() => apply(true), 200));
+$("reset").addEventListener("click", () => {
+  Object.values(FIELDS).forEach(id => { $(id).value = id === "f-sort" ? "desc" : ""; });
+  S.hidden.clear(); renderLegend(); apply(true);
+});
+$("refresh").addEventListener("click", () => { cache.clear(); load(false); });
+$("demo").addEventListener("click", loadDemo);
+$("auto").addEventListener("click", ev => {
+  const b = ev.currentTarget, on = b.getAttribute("aria-pressed") !== "true";
+  b.setAttribute("aria-pressed", String(on)); b.classList.toggle("on", on); clearInterval(S.timer);
+  if (on) S.timer = setInterval(() => { if (!document.hidden && !S.demo) { cache.clear(); load(false); } }, REFRESH_MS);
+});
+document.addEventListener("keydown", ev => {
+  const typing = /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName);
+  if (ev.key === "/" && !typing) { ev.preventDefault(); $("f-q").focus(); }
+  if (ev.key === "Escape") {
+    if (typing) document.activeElement.blur();
+    else if (S.selected != null) { S.selected = null; S.req++; map.closePopup(); apply(false); $("details").replaceChildren(h("div", "empty", t("Selecciona un acontecimiento para ver su informe."))); }
+  }
+});
+
+load(true);
+})();
 </script>
-
 </body>
 </html>
