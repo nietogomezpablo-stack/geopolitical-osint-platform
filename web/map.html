@@ -1786,5 +1786,294 @@ load(true);
 })();
 </script>
 
+
+<style id="meridian-investigation-manager-style">
+#meridian-investigation-manager {
+    margin: 12px 20px;
+    padding: 13px;
+    background: #12263b;
+    border: 1px solid #345675;
+    border-radius: 8px;
+    color: #dceafa;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+}
+
+#meridian-investigation-manager h3 {
+    font-size: 14px;
+    margin: 0 0 10px;
+}
+
+#meridian-investigation-manager select,
+#meridian-investigation-manager textarea,
+#meridian-investigation-manager button {
+    background: #1b344d;
+    color: #e6f2ff;
+    border: 1px solid #456b8c;
+    border-radius: 5px;
+    padding: 7px;
+    font-size: 12px;
+}
+
+#meridian-investigation-manager textarea {
+    width: 100%;
+    min-height: 80px;
+    resize: vertical;
+    margin: 8px 0;
+}
+
+#meridian-investigation-manager button {
+    cursor: pointer;
+    margin-right: 7px;
+}
+
+#meridian-investigation-manager .investigation-row {
+    border-top: 1px solid #29455f;
+    padding: 12px 0;
+}
+
+#meridian-investigation-manager .investigation-title {
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+#meridian-investigation-manager .investigation-meta {
+    font-size: 11px;
+    color: #a9c7dd;
+    margin-bottom: 7px;
+}
+
+#meridian-investigation-manager .investigation-history {
+    white-space: pre-wrap;
+    font-size: 11px;
+    margin-top: 8px;
+    color: #b8d1e4;
+}
+</style>
+
+<section id="meridian-investigation-manager">
+    <h3>Gestión de investigaciones · Níger</h3>
+
+    <div id="meridian-investigation-summary">
+        Cargando investigaciones...
+    </div>
+
+    <div id="meridian-investigation-items"></div>
+</section>
+
+<script id="meridian-investigation-manager-script">
+(function () {
+    "use strict";
+
+    const container = document.getElementById(
+        "meridian-investigation-manager"
+    );
+
+    const items = document.getElementById(
+        "meridian-investigation-items"
+    );
+
+    const summary = document.getElementById(
+        "meridian-investigation-summary"
+    );
+
+    const statuses = [
+        ["pending", "Pendiente"],
+        ["investigating", "En investigación"],
+        ["reviewed", "Revisado"],
+        ["dismissed", "Descartado"]
+    ];
+
+    function node(tag, text) {
+        const element = document.createElement(tag);
+
+        if (text !== undefined) {
+            element.textContent = text;
+        }
+
+        return element;
+    }
+
+    async function load() {
+        const response = await fetch(
+            "/api/investigations",
+            {cache: "no-store"}
+        );
+
+        if (!response.ok) {
+            summary.textContent =
+                "No se pudieron cargar las investigaciones.";
+            return;
+        }
+
+        const data = await response.json();
+
+        summary.textContent =
+            data.count + " candidatos disponibles";
+
+        items.replaceChildren();
+
+        data.candidates.forEach(candidate => {
+            const investigation = candidate.investigation;
+
+            const row = node("div");
+            row.className = "investigation-row";
+
+            const title = node(
+                "div",
+                candidate.title
+            );
+            title.className = "investigation-title";
+
+            const meta = node(
+                "div",
+                candidate.event_type +
+                " · " +
+                candidate.publication_date
+            );
+            meta.className = "investigation-meta";
+
+            const select = node("select");
+
+            statuses.forEach(([value, label]) => {
+                const option = node("option", label);
+                option.value = value;
+                select.appendChild(option);
+            });
+
+            select.value = investigation.status;
+
+            const textarea = node("textarea");
+            textarea.value = investigation.notes;
+            textarea.placeholder =
+                "Notas y observaciones del analista...";
+
+            const save = node(
+                "button",
+                "Guardar investigación"
+            );
+
+            const history = node(
+                "button",
+                "Ver historial"
+            );
+
+            const message = node("div");
+            message.className = "investigation-meta";
+
+            const historyContainer = node("div");
+            historyContainer.className =
+                "investigation-history";
+
+            save.addEventListener("click", async () => {
+                save.disabled = true;
+                message.textContent = "Guardando...";
+
+                try {
+                    const response = await fetch(
+                        "/api/investigations/" +
+                        encodeURIComponent(
+                            investigation.candidate_key
+                        ),
+                        {
+                            method: "PUT",
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+                            body: JSON.stringify({
+                                status: select.value,
+                                notes: textarea.value
+                            })
+                        }
+                    );
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(
+                            result.error || "Error"
+                        );
+                    }
+
+                    message.textContent =
+                        "Investigación guardada.";
+
+                } catch (error) {
+                    message.textContent =
+                        "Error: " + error.message;
+                } finally {
+                    save.disabled = false;
+                }
+            });
+
+            history.addEventListener(
+                "click",
+                async () => {
+                    const response = await fetch(
+                        "/api/investigations/" +
+                        encodeURIComponent(
+                            investigation.candidate_key
+                        ) +
+                        "/history"
+                    );
+
+                    if (!response.ok) {
+                        historyContainer.textContent =
+                            "Error al consultar el historial.";
+                        return;
+                    }
+
+                    const data = await response.json();
+
+                    historyContainer.textContent =
+                        data.history.length
+                            ? data.history.map(item =>
+                                item.changed_at +
+                                " · " +
+                                item.new_status +
+                                "\n" +
+                                item.notes
+                            ).join("\n\n")
+                            : "Sin cambios registrados.";
+                }
+            );
+
+            row.append(
+                title,
+                meta,
+                select,
+                textarea,
+                save,
+                history,
+                message,
+                historyContainer
+            );
+
+            items.appendChild(row);
+        });
+    }
+
+    // Colocar el gestor dentro del panel OSINT.
+    const list = document.getElementById(
+        "meridian-v4-list"
+    );
+
+    if (list) {
+        list.insertAdjacentElement(
+            "afterend",
+            container
+        );
+    }
+
+    load().catch(error => {
+        summary.textContent =
+            "Error: " + error.message;
+    });
+
+})();
+</script>
+
 </body>
 </html>

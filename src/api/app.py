@@ -431,6 +431,103 @@ def meridian_intelligence_v4():
         json.loads(path.read_text(encoding="utf-8"))
     )
 
+
+
+@app.route("/api/investigations", methods=["GET"])
+def meridian_list_investigations():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from investigation_manager import list_investigations
+
+    candidates = list_investigations()
+
+    return jsonify({
+        "country": "Niger",
+        "count": len(candidates),
+        "candidates": candidates,
+    })
+
+
+@app.route("/api/investigations/<path:key>", methods=["PUT"])
+def meridian_update_investigation(key):
+    import sys
+    from pathlib import Path
+    from flask import jsonify, request
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from investigation_manager import update_investigation
+
+    if not request.is_json:
+        return jsonify({
+            "error": "Se requiere JSON"
+        }), 415
+
+    payload = request.get_json(silent=True)
+
+    if not isinstance(payload, dict):
+        return jsonify({
+            "error": "JSON inválido"
+        }), 400
+
+    try:
+        result = update_investigation(
+            key,
+            payload.get("status"),
+            payload.get("notes", "")
+        )
+    except ValueError as error:
+        return jsonify({
+            "error": str(error)
+        }), 400
+
+    return jsonify(result)
+
+
+@app.route("/api/investigations/<path:key>/history")
+def meridian_investigation_history(key):
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from investigation_manager import get_history
+
+    try:
+        history = get_history(key)
+    except ValueError as error:
+        return jsonify({
+            "error": str(error)
+        }), 404
+
+    return jsonify({
+        "candidate_key": key,
+        "history": history,
+    })
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",
