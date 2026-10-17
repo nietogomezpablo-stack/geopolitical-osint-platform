@@ -1820,6 +1820,108 @@ def meridian_v16_export_csv():
         },
     )
 
+
+
+@app.route("/api/intelligence-v17/alerts")
+def meridian_v17_alerts():
+    import sys
+    from pathlib import Path
+    from flask import jsonify, request
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_triage_alerts_v17 import list_alerts
+
+    status = request.args.get("status", "active")
+
+    try:
+        result = list_alerts(status=status)
+
+    except ValueError as error:
+        return jsonify({
+            "error": str(error)
+        }), 400
+
+    return jsonify(result)
+
+
+@app.route("/api/intelligence-v17/alerts/synchronize", methods=["POST"])
+def meridian_v17_synchronize():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_triage_alerts_v17 import synchronize
+
+    try:
+        result = synchronize()
+
+    except RuntimeError as error:
+        return jsonify({
+            "error": str(error)
+        }), 409
+
+    return jsonify(result)
+
+
+@app.route("/api/intelligence-v17/alerts/<int:alert_id>/read", methods=["PUT"])
+def meridian_v17_mark_read(alert_id):
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_triage_alerts_v17 import mark_read
+
+    result = mark_read(alert_id)
+
+    if result is None:
+        return jsonify({
+            "error": "Alerta no encontrada"
+        }), 404
+
+    return jsonify(result)
+
+
+@app.route("/api/intelligence-v17/summary")
+def meridian_v17_summary():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from intelligence_triage_alerts_v17 import summary
+
+    return jsonify(summary())
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",

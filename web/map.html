@@ -5125,5 +5125,274 @@ load(true);
 })();
 </script>
 
+
+<style id="meridian-triage-alerts-v17-style">
+#meridian-triage-alerts-v17 {
+    background:#102337;
+    border:1px solid #35546d;
+    border-radius:8px;
+    padding:12px;
+    margin:12px 20px;
+    color:#e1edfa;
+    font:12px Arial,sans-serif;
+}
+
+#meridian-triage-alerts-v17 h3 {
+    font-size:14px;
+    margin:0 0 10px;
+}
+
+#meridian-triage-alerts-v17 button {
+    background:#1b344d;
+    color:#e6f2ff;
+    border:1px solid #456b8c;
+    border-radius:5px;
+    padding:7px;
+    margin:0 7px 8px 0;
+    cursor:pointer;
+    font-size:12px;
+}
+
+#meridian-triage-alerts-v17 .v17-row {
+    border-top:1px solid #2e4c66;
+    padding:9px 0;
+}
+
+#meridian-triage-alerts-v17 .v17-title {
+    font-weight:bold;
+    margin-bottom:5px;
+}
+
+#meridian-triage-alerts-v17 .v17-meta {
+    color:#aac6da;
+    font-size:11px;
+    line-height:1.5;
+}
+</style>
+
+<section id="meridian-triage-alerts-v17">
+    <h3>Alertas de investigación · Níger</h3>
+
+    <div id="meridian-v17-summary">
+        Cargando alertas...
+    </div>
+
+    <div style="margin-top:10px">
+        <button id="meridian-v17-sync">
+            Sincronizar alertas
+        </button>
+
+        <button id="meridian-v17-refresh">
+            Actualizar
+        </button>
+
+        <button id="meridian-v17-show-all">
+            Mostrar todas
+        </button>
+    </div>
+
+    <div id="meridian-v17-list"></div>
+</section>
+
+<script id="meridian-triage-alerts-v17-script">
+(function () {
+    "use strict";
+
+    const summary = document.getElementById(
+        "meridian-v17-summary"
+    );
+
+    const list = document.getElementById(
+        "meridian-v17-list"
+    );
+
+    let filter = "active";
+
+    function element(tag, value) {
+        const node = document.createElement(tag);
+
+        if (value !== undefined) {
+            node.textContent = String(value);
+        }
+
+        return node;
+    }
+
+    async function load() {
+        const responses = await Promise.all([
+            fetch(
+                "/api/intelligence-v17/summary",
+                {cache:"no-store"}
+            ),
+            fetch(
+                "/api/intelligence-v17/alerts?status=" +
+                encodeURIComponent(filter),
+                {cache:"no-store"}
+            )
+        ]);
+
+        if (!responses.every(response => response.ok)) {
+            throw new Error("Error consultando alertas");
+        }
+
+        const status = await responses[0].json();
+        const data = await responses[1].json();
+
+        summary.textContent =
+            status.counts.active +
+            " alertas activas · " +
+            status.counts.critical +
+            " críticas · " +
+            status.counts.high +
+            " altas · " +
+            status.unread_active +
+            " sin leer";
+
+        list.replaceChildren();
+
+        data.alerts.forEach(alert => {
+            const row = element("div");
+            row.className = "v17-row";
+
+            const title = element(
+                "div",
+                alert.candidate_key +
+                " · " +
+                alert.alert_type
+            );
+            title.className = "v17-title";
+
+            const meta = element(
+                "div",
+                alert.severity +
+                " · " +
+                alert.status +
+                " · " +
+                (alert.is_read ? "Leída" : "Sin leer")
+            );
+            meta.className = "v17-meta";
+
+            const message = element(
+                "div",
+                alert.message
+            );
+            message.className = "v17-meta";
+
+            row.append(title, meta, message);
+
+            if (!alert.is_read) {
+                const button = element(
+                    "button",
+                    "Marcar como leída"
+                );
+
+                button.addEventListener(
+                    "click",
+                    async () => {
+                        try {
+                            const response = await fetch(
+                                "/api/intelligence-v17/alerts/" +
+                                alert.id +
+                                "/read",
+                                {method:"PUT"}
+                            );
+
+                            if (!response.ok) {
+                                throw new Error(
+                                    "No se pudo marcar la alerta"
+                                );
+                            }
+
+                            await load();
+
+                        } catch (error) {
+                            summary.textContent = error.message;
+                        }
+                    }
+                );
+
+                row.appendChild(button);
+            }
+
+            list.appendChild(row);
+        });
+
+        if (!data.alerts.length) {
+            list.appendChild(
+                element(
+                    "div",
+                    "No hay alertas para este filtro."
+                )
+            );
+        }
+    }
+
+    document.getElementById(
+        "meridian-v17-sync"
+    ).addEventListener("click", async () => {
+        try {
+            summary.textContent =
+                "Sincronizando alertas...";
+
+            const response = await fetch(
+                "/api/intelligence-v17/alerts/synchronize",
+                {method:"POST"}
+            );
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.error ||
+                    "Falló la sincronización"
+                );
+            }
+
+            await load();
+
+        } catch (error) {
+            summary.textContent = error.message;
+        }
+    });
+
+    document.getElementById(
+        "meridian-v17-refresh"
+    ).addEventListener("click", () => {
+        load().catch(error => {
+            summary.textContent = error.message;
+        });
+    });
+
+    document.getElementById(
+        "meridian-v17-show-all"
+    ).addEventListener("click", () => {
+        filter = filter === "active"
+            ? "all"
+            : "active";
+
+        load().catch(error => {
+            summary.textContent = error.message;
+        });
+    });
+
+    const triage = document.getElementById(
+        "meridian-triage-v16"
+    );
+
+    if (triage) {
+        triage.insertAdjacentElement(
+            "afterend",
+            document.getElementById(
+                "meridian-triage-alerts-v17"
+            )
+        );
+    }
+
+    load().catch(error => {
+        summary.textContent = error.message;
+    });
+})();
+</script>
+
 </body>
 </html>
