@@ -180,6 +180,178 @@ html[dir="rtl"] .leaflet-container{direction:ltr}
 }
 </style>
 
+
+<style id="meridian-legacy-panel-fix">
+#meridian-candidates-panel {
+    display: none !important;
+}
+</style>
+
+
+<style id="meridian-dashboard-upgrade">
+
+#meridian-v4-launcher {
+    left: 20px !important;
+    bottom: 20px !important;
+    font-size: 14px !important;
+    padding: 13px 18px !important;
+    background: #153b59 !important;
+    border: 1px solid #467a9c !important;
+}
+
+#meridian-v4-panel {
+    inset: 3vh 3vw !important;
+    background: #0b1624 !important;
+}
+
+#meridian-v4-panel .v4-header {
+    padding: 20px 26px !important;
+}
+
+#meridian-v4-panel .v4-title {
+    font-size: 23px !important;
+    letter-spacing: 0.2px;
+}
+
+#meridian-v4-panel .v4-controls {
+    padding: 18px 24px !important;
+    gap: 14px !important;
+}
+
+#meridian-v4-panel input,
+#meridian-v4-panel select {
+    font-size: 14px !important;
+    padding: 12px !important;
+    min-width: 210px !important;
+}
+
+#meridian-v4-panel .v4-stats {
+    font-size: 14px !important;
+    padding: 15px 24px !important;
+}
+
+#meridian-v4-panel .v4-list {
+    padding: 22px 26px !important;
+}
+
+#meridian-v4-panel .v4-card {
+    padding: 21px !important;
+    margin-bottom: 18px !important;
+    border-radius: 10px !important;
+    transition: border-color 0.2s;
+}
+
+#meridian-v4-panel .v4-card:hover {
+    border-color: #5789b0 !important;
+}
+
+#meridian-v4-panel .v4-card h3 {
+    font-size: 19px !important;
+    line-height: 1.5 !important;
+    margin: 12px 0 !important;
+}
+
+#meridian-v4-panel .v4-meta {
+    font-size: 14px !important;
+    line-height: 1.7 !important;
+    margin: 9px 0 !important;
+}
+
+#meridian-v4-panel .v4-tag {
+    font-size: 12px !important;
+    padding: 6px 9px !important;
+}
+
+#meridian-v4-panel summary {
+    font-size: 15px !important;
+    padding: 8px 0;
+}
+
+#meridian-v4-panel .v4-evidence {
+    font-size: 14px !important;
+    line-height: 1.8 !important;
+    padding: 12px 15px !important;
+}
+
+#meridian-v4-panel .v4-card button {
+    background: #234765;
+    color: #e7f3ff;
+    border: 1px solid #4a7fa3;
+    border-radius: 6px;
+    padding: 10px 13px;
+    margin: 8px 8px 8px 0;
+    font-size: 13px;
+}
+
+#meridian-v4-panel .v4-card button:hover {
+    background: #30658a;
+}
+
+#meridian-investigation-map {
+    height: 360px;
+    width: 100%;
+    margin: 15px 0;
+    border: 1px solid #35516c;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#meridian-investigation-map .leaflet-container {
+    background: #dbe7ed;
+}
+
+#meridian-investigation-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 24px;
+    border-bottom: 1px solid #2c4359;
+}
+
+#meridian-investigation-toolbar button {
+    background: #1b3851;
+    color: white;
+    border: 1px solid #416b8b;
+    padding: 10px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#meridian-investigation-toolbar button:hover {
+    background: #285779;
+}
+
+#meridian-map-warning {
+    font-size: 13px;
+    color: #b6cee0;
+    margin: 8px 0;
+}
+
+@media (max-width: 700px) {
+    #meridian-v4-panel {
+        inset: 1vh 1vw !important;
+    }
+
+    #meridian-v4-panel .v4-title {
+        font-size: 17px !important;
+    }
+
+    #meridian-v4-panel .v4-card h3 {
+        font-size: 16px !important;
+    }
+
+    #meridian-v4-panel .v4-controls {
+        padding: 10px !important;
+    }
+
+    #meridian-v4-panel input,
+    #meridian-v4-panel select {
+        min-width: 100% !important;
+    }
+}
+
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1335,6 +1507,386 @@ load(true);
             closePanel();
         }
     });
+})();
+</script>
+
+
+<script id="meridian-investigation-upgrade">
+(function () {
+    "use strict";
+
+    const panel = document.getElementById(
+        "meridian-v4-panel"
+    );
+
+    const list = document.getElementById(
+        "meridian-v4-list"
+    );
+
+    if (!panel || !list) {
+        return;
+    }
+
+    const toolbar = document.createElement("div");
+    toolbar.id = "meridian-investigation-toolbar";
+
+    const mapButton = document.createElement("button");
+    mapButton.textContent = "Mapa de referencias";
+
+    const jsonButton = document.createElement("button");
+    jsonButton.textContent = "Exportar JSON";
+
+    const csvButton = document.createElement("button");
+    csvButton.textContent = "Exportar CSV";
+
+    toolbar.append(
+        mapButton,
+        jsonButton,
+        csvButton
+    );
+
+    const stats = document.getElementById(
+        "meridian-v4-stats"
+    );
+
+    if (stats) {
+        stats.insertAdjacentElement(
+            "afterend",
+            toolbar
+        );
+    }
+
+    const mapContainer = document.createElement("div");
+    mapContainer.id = "meridian-investigation-map";
+    mapContainer.style.display = "none";
+
+    const warning = document.createElement("p");
+    warning.id = "meridian-map-warning";
+    warning.textContent =
+        "Las ubicaciones son referencias geográficas " +
+        "mencionadas en noticias. No representan " +
+        "incidentes confirmados.";
+
+    warning.style.display = "none";
+
+    toolbar.insertAdjacentElement(
+        "afterend",
+        mapContainer
+    );
+
+    mapContainer.insertAdjacentElement(
+        "afterend",
+        warning
+    );
+
+    let investigationMap = null;
+    let markerLayer = null;
+    let cachedData = null;
+
+    async function getData() {
+        const response = await fetch(
+            "/api/intelligence-v4",
+            {cache: "no-store"}
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                "Error HTTP " + response.status
+            );
+        }
+
+        cachedData = await response.json();
+        return cachedData;
+    }
+
+    function download(filename, content, mime) {
+        const blob = new Blob(
+            [content],
+            {type: mime}
+        );
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = filename;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(() => {
+            URL.revokeObjectURL(url);
+        }, 1000);
+    }
+
+    function csvCell(value) {
+        const text = String(value ?? "");
+
+        // Evitar ejecución de fórmulas al abrir el CSV.
+        const safe = /^[\s]*[=+\-@]/.test(text)
+            ? "'" + text
+            : text;
+
+        return '"' + safe.replace(/"/g, '""') + '"';
+    }
+
+    jsonButton.addEventListener(
+        "click",
+        async function () {
+            const data = await getData();
+
+            download(
+                "meridian_niger_intelligence.json",
+                JSON.stringify(data, null, 2),
+                "application/json"
+            );
+        }
+    );
+
+    csvButton.addEventListener(
+        "click",
+        async function () {
+            const data = await getData();
+
+            const rows = [[
+                "ID",
+                "Tipo",
+                "Titulo",
+                "Estado",
+                "Fecha_publicacion",
+                "Localidades_mencionadas",
+                "Numero_fuentes",
+                "Verificado"
+            ]];
+
+            data.candidates.forEach(item => {
+                rows.push([
+                    item.candidate_id,
+                    item.event_type,
+                    item.title,
+                    item.status,
+                    item.publication_date,
+                    (item.locations || [])
+                        .map(location => location.name)
+                        .join("; "),
+                    (item.source_urls || []).length,
+                    "NO"
+                ]);
+            });
+
+            const csv = rows
+                .map(row => row.map(csvCell).join(","))
+                .join("\r\n");
+
+            download(
+                "meridian_niger_candidates.csv",
+                "\uFEFF" + csv,
+                "text/csv;charset=utf-8"
+            );
+        }
+    );
+
+    function showLocations(locations) {
+        if (typeof L === "undefined") {
+            alert("Leaflet no está disponible.");
+            return;
+        }
+
+        mapContainer.style.display = "block";
+        warning.style.display = "block";
+
+        if (!investigationMap) {
+            investigationMap = L.map(
+                mapContainer,
+                {
+                    zoomControl: true
+                }
+            ).setView(
+                [17.6, 8.1],
+                5
+            );
+
+            L.tileLayer(
+                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+                    maxZoom: 18,
+                    attribution:
+                        "&copy; OpenStreetMap contributors"
+                }
+            ).addTo(investigationMap);
+
+            markerLayer = L.layerGroup()
+                .addTo(investigationMap);
+        }
+
+        markerLayer.clearLayers();
+
+        const bounds = [];
+
+        locations.forEach(location => {
+            const lat = Number(location.latitude);
+            const lon = Number(location.longitude);
+
+            if (
+                !Number.isFinite(lat) ||
+                !Number.isFinite(lon)
+            ) {
+                return;
+            }
+
+            const marker = L.circleMarker(
+                [lat, lon],
+                {
+                    radius: 8,
+                    color: "#c58a24",
+                    fillColor: "#f5bd58",
+                    fillOpacity: 0.65,
+                    weight: 2
+                }
+            );
+
+            const popup = document.createElement("div");
+
+            const name = document.createElement("strong");
+            name.textContent = location.name || "Localidad";
+
+            const description = document.createElement("p");
+            description.textContent =
+                "Referencia geográfica no verificada.";
+
+            popup.append(name, description);
+
+            marker.bindPopup(popup);
+            marker.addTo(markerLayer);
+
+            bounds.push([lat, lon]);
+        });
+
+        setTimeout(() => {
+            investigationMap.invalidateSize();
+
+            if (bounds.length) {
+                investigationMap.fitBounds(
+                    bounds,
+                    {
+                        padding: [35, 35],
+                        maxZoom: 9
+                    }
+                );
+            } else {
+                investigationMap.setView(
+                    [17.6, 8.1],
+                    5
+                );
+            }
+        }, 100);
+    }
+
+    mapButton.addEventListener(
+        "click",
+        async function () {
+            if (
+                mapContainer.style.display !== "none"
+            ) {
+                mapContainer.style.display = "none";
+                warning.style.display = "none";
+                return;
+            }
+
+            const data = await getData();
+
+            const unique = new Map();
+
+            data.candidates.forEach(item => {
+                (item.locations || []).forEach(location => {
+                    if (
+                        location.name &&
+                        !unique.has(location.name)
+                    ) {
+                        unique.set(
+                            location.name,
+                            location
+                        );
+                    }
+                });
+            });
+
+            showLocations([...unique.values()]);
+        }
+    );
+
+    // Añadir botón a cada tarjeta.
+    // MutationObserver permite que funcione incluso
+    // cuando el dashboard reconstruye las tarjetas
+    // al cambiar los filtros.
+
+    function enhanceCards() {
+        const cards = list.querySelectorAll(
+            ".v4-card"
+        );
+
+        cards.forEach(card => {
+            if (
+                card.dataset.meridianEnhanced === "1"
+            ) {
+                return;
+            }
+
+            card.dataset.meridianEnhanced = "1";
+
+            const button = document.createElement(
+                "button"
+            );
+
+            button.type = "button";
+            button.textContent = "Ver ubicaciones";
+
+            button.addEventListener(
+                "click",
+                async function () {
+                    const data = await getData();
+
+                    const title = card.querySelector(
+                        "h3"
+                    )?.textContent;
+
+                    const candidate = data.candidates.find(
+                        item => item.title === title
+                    );
+
+                    if (!candidate) {
+                        return;
+                    }
+
+                    showLocations(
+                        candidate.locations || []
+                    );
+
+                    mapContainer.scrollIntoView({
+                        behavior: "smooth",
+                        block: "nearest"
+                    });
+                }
+            );
+
+            card.appendChild(button);
+        });
+    }
+
+    const observer = new MutationObserver(
+        enhanceCards
+    );
+
+    observer.observe(
+        list,
+        {
+            childList: true
+        }
+    );
+
+    enhanceCards();
+
 })();
 </script>
 
