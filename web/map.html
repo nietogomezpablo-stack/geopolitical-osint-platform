@@ -5434,5 +5434,173 @@ load(true);
 })();
 </script>
 
+
+<style>
+#meridian-quality-v25 {
+    background: #102337;
+    border: 1px solid #36536c;
+    border-radius: 8px;
+    color: #e4eff9;
+    padding: 14px;
+    margin: 12px 20px;
+    font: 12px Arial, sans-serif;
+}
+
+#meridian-quality-v25 h3 {
+    margin: 0 0 10px;
+    font-size: 14px;
+}
+
+#meridian-quality-v25 button,
+#meridian-quality-v25 a {
+    background: #1e3a55;
+    border: 1px solid #476b8a;
+    color: #e4eff9;
+    padding: 7px 10px;
+    border-radius: 5px;
+    text-decoration: none;
+    display: inline-block;
+    margin: 5px 8px 8px 0;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+#meridian-quality-v25 .quality-row {
+    border-top: 1px solid #304b62;
+    padding: 7px 0;
+    line-height: 1.5;
+}
+
+#meridian-quality-v25 .quality-muted {
+    color: #aac2d5;
+}
+</style>
+
+<section id="meridian-quality-v25">
+    <h3>Calidad de inteligencia · Níger</h3>
+
+    <div id="meridian-quality-v25-summary">
+        Cargando diagnóstico...
+    </div>
+
+    <button id="meridian-quality-v25-refresh">
+        Actualizar
+    </button>
+
+    <a href="/api/quality-v25/export.csv">
+        Exportar CSV
+    </a>
+
+    <a href="/api/quality-v25/report">
+        Ver JSON
+    </a>
+
+    <div id="meridian-quality-v25-candidates"></div>
+
+    <div class="quality-muted" style="margin-top:10px">
+        Las alertas requieren revisión documental.
+        No equivalen a acontecimientos confirmados.
+    </div>
+</section>
+
+<script>
+(function () {
+    "use strict";
+
+    const panel = document.getElementById(
+        "meridian-quality-v25"
+    );
+
+    const summary = document.getElementById(
+        "meridian-quality-v25-summary"
+    );
+
+    const candidates = document.getElementById(
+        "meridian-quality-v25-candidates"
+    );
+
+    function addText(parent, className, text) {
+        const element = document.createElement("div");
+
+        element.className = className;
+        element.textContent = text;
+
+        parent.appendChild(element);
+    }
+
+    async function refresh() {
+        const response = await fetch(
+            "/api/quality-v25/report",
+            {cache: "no-store"}
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                "Error consultando calidad de datos"
+            );
+        }
+
+        const report = await response.json();
+        const data = report.summary;
+
+        summary.textContent =
+            "Noticias: " + data.articles +
+            " · Eventos registrados: " +
+            data.events_in_database +
+            " · Candidatos: " +
+            data.candidate_references +
+            " · Alertas activas: " +
+            data.alerts_active +
+            " · Revisiones pendientes: " +
+            data.candidates_requiring_review +
+            " · Duplicados por URL: " +
+            data.duplicate_article_records;
+
+        candidates.replaceChildren();
+
+        report.candidates.forEach(candidate => {
+            addText(
+                candidates,
+                "quality-row",
+                candidate.candidate_key +
+                " · Alertas activas: " +
+                candidate.active_alert_count +
+                " · Auditorías: " +
+                candidate.audit_records +
+                " · Revisión: " +
+                (
+                    candidate.review_required
+                        ? "pendiente"
+                        : "sin incidencias detectadas"
+                )
+            );
+        });
+    }
+
+    document.getElementById(
+        "meridian-quality-v25-refresh"
+    ).addEventListener("click", () => {
+        refresh().catch(error => {
+            summary.textContent = error.message;
+        });
+    });
+
+    const operations = document.getElementById(
+        "meridian-operations-v21"
+    );
+
+    if (operations) {
+        operations.insertAdjacentElement(
+            "afterend",
+            panel
+        );
+    }
+
+    refresh().catch(error => {
+        summary.textContent = error.message;
+    });
+})();
+</script>
+
 </body>
 </html>

@@ -1967,6 +1967,80 @@ def meridian_operations_csv_v21():
     return Response(report_csv(), mimetype='text/csv; charset=utf-8',
         headers={'Content-Disposition':'attachment; filename=meridian_niger_operations.csv'})
 
+
+
+@app.route("/api/quality-v25/report")
+def meridian_quality_v25_report():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from meridian_quality_v22_v25 import analyze
+
+    return jsonify(analyze())
+
+
+@app.route("/api/quality-v25/export.csv")
+def meridian_quality_v25_csv():
+    import sys
+    from pathlib import Path
+    from flask import Response
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from meridian_quality_v22_v25 import (
+        analyze,
+        export_csv,
+    )
+
+    return Response(
+        export_csv(analyze()),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition":
+                "attachment; filename=meridian_quality_v25.csv"
+        },
+    )
+
+
+@app.route("/api/quality-v25/summary")
+def meridian_quality_v25_summary():
+    import sys
+    from pathlib import Path
+    from flask import jsonify
+
+    processing = (
+        Path(__file__).resolve().parents[1]
+        / "processing"
+    )
+
+    if str(processing) not in sys.path:
+        sys.path.insert(0, str(processing))
+
+    from meridian_quality_v22_v25 import analyze
+
+    report = analyze()
+
+    return jsonify({
+        "country": "Niger",
+        "version": 25,
+        "summary": report["summary"],
+    })
+
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",
